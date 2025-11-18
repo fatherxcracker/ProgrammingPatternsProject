@@ -45,7 +45,7 @@ public class SharpBurgerManager extends Application {
 
         Stage stage = new Stage();
         stage.setScene(new Scene(view, 400, 300));
-        stage.setTitle("Menu Item Management");
+        stage.setTitle("Order Item Management");
         stage.show();
     }
 

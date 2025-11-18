@@ -22,16 +22,39 @@ public class OrderView extends VBox {
         createTable();
         bindTableData();
 
-        HBox hBox = new HBox();
+        HBox labelHBox = new HBox();
+        HBox searchHBox = new HBox();
+        HBox radioButtonRBHBox = new HBox();
         Button searchButton = new Button("Search");
         TextField searchTF = new TextField();
-        Label searchLabel = new Label("Search by Type or Status (Completed or Incompleted)");
+        Label searchLabel = new Label("Search by Type of the Order: ");
+        Label statusTGLabel = new Label("Option filter for Status of the Order: ");
 
         setupSearchButton(searchButton, searchTF);
+        labelHBox.getChildren().add(searchLabel);
+        searchHBox.getChildren().addAll(searchTF, searchButton);
 
-        hBox.getChildren().addAll(searchLabel, searchTF, searchButton);
+        ToggleGroup statusCompletedOrUncompletedTG = new ToggleGroup();
+        RadioButton uncompletedRB = new RadioButton("Uncompleted");
+        uncompletedRB.setToggleGroup(statusCompletedOrUncompletedTG);
+        RadioButton completedRB = new RadioButton("Completed");
+        completedRB.setToggleGroup(statusCompletedOrUncompletedTG);
+        RadioButton noneRB = new RadioButton("None");
+        noneRB.setToggleGroup(statusCompletedOrUncompletedTG);
 
-        this.getChildren().addAll(tableView, hBox);
+        uncompletedRB.setOnAction(actionEvent -> handleUncompletedRB());
+        completedRB.setOnAction(actionEvent -> handleCompletedRB());
+        noneRB.setOnAction(actionEvent -> bindTableData());
+
+        noneRB.setSelected(true);
+        completedRB.setSelected(false);
+        uncompletedRB.setSelected(false);
+
+        radioButtonRBHBox.getChildren().addAll(noneRB, completedRB, uncompletedRB);
+        this.getChildren().addAll(statusTGLabel, radioButtonRBHBox);
+        this.getChildren().add(labelHBox);
+        this.getChildren().add(searchHBox);
+        this.getChildren().add(tableView);
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
     }
@@ -47,22 +70,26 @@ public class OrderView extends VBox {
         }
 
         List<OrderItem> orderItemList = controller.getOrderItems();
-        if (searchInput.equals("Completed")) {
-            List<OrderItem> filteredList = orderItemList.stream()
-                    .filter(e -> e.statusProperty().getValue().equals(true))
-                    .toList();
-            tableView.setItems(FXCollections.observableArrayList(filteredList));
-        } else if (searchInput.equals("Incompleted")) {
-            List<OrderItem> filteredList = orderItemList.stream()
-                    .filter(e -> e.statusProperty().getValue().equals(false))
-                    .toList();
-            tableView.setItems(FXCollections.observableArrayList(filteredList));
-        } else {
-            List<OrderItem> filteredList = orderItemList.stream()
-                    .filter(e -> e.typeProperty().getValue().contains(searchInput))
-                    .toList();
-            tableView.setItems(FXCollections.observableArrayList(filteredList));
-        }
+        List<OrderItem> filteredList = orderItemList.stream()
+                .filter(e -> e.typeProperty().getValue().contains(searchInput))
+                .toList();
+        tableView.setItems(FXCollections.observableArrayList(filteredList));
+    }
+
+    private void handleUncompletedRB() {
+        List<OrderItem> orderItemList = controller.getOrderItems();
+        List<OrderItem> filteredList = orderItemList.stream()
+                .filter(e -> !e.statusProperty().getValue())
+                .toList();
+        tableView.setItems(FXCollections.observableArrayList(filteredList));
+    }
+
+    private void handleCompletedRB() {
+        List<OrderItem> orderItemList = controller.getOrderItems();
+        List<OrderItem> filteredList = orderItemList.stream()
+                .filter(e -> e.statusProperty().getValue().equals(true))
+                .toList();
+        tableView.setItems(FXCollections.observableArrayList(filteredList));
     }
 
     private void createTable() {
@@ -84,7 +111,7 @@ public class OrderView extends VBox {
                 if (isRowEmpty || orderCompleted == null) {
                     setText(null);
                 } else {
-                    setText(orderCompleted ? "Completed" : "Incompleted");
+                    setText(orderCompleted ? "Completed" : "Uncompleted");
                 }
             }
         });
