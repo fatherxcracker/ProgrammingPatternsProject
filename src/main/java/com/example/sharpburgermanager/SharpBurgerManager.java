@@ -17,8 +17,8 @@ public class SharpBurgerManager extends Application {
         Button menuBtn = new Button("Menu Item Management");
         Button orderBtn = new Button("Order Management");
 
-        menuBtn.setOnAction(e -> openMenuWindow());
-        orderBtn.setOnAction(e -> openOrderWindow());
+        menuBtn.setOnAction(e -> openMenuWindow(primaryStage));
+        orderBtn.setOnAction(e -> openOrderWindow(primaryStage));
 
         VBox root = new VBox(10, menuBtn, orderBtn);
         root.setStyle("-fx-padding: 20; -fx-alignment: center;");
@@ -29,7 +29,7 @@ public class SharpBurgerManager extends Application {
         primaryStage.show();
     }
 
-    private void openMenuWindow() {
+    private void openMenuWindow(Stage primaryStage) {
         MenuController controller = new MenuController();
         MenuView view = new MenuView(controller);
 
@@ -37,9 +37,10 @@ public class SharpBurgerManager extends Application {
         stage.setScene(new Scene(view, 400, 300));
         stage.setTitle("Menu Item Management");
         stage.show();
+        primaryStage.hide(); // Closes main window
     }
 
-    private void openOrderWindow() {
+    private void openOrderWindow(Stage primaryStage) {
         OrderController controller = new OrderController();
         OrderView view = new OrderView(controller);
 
@@ -47,6 +48,7 @@ public class SharpBurgerManager extends Application {
         stage.setScene(new Scene(view, 400, 300));
         stage.setTitle("Order Item Management");
         stage.show();
+        primaryStage.hide(); // Closes main window
     }
 
     public static void main(String[] args) {

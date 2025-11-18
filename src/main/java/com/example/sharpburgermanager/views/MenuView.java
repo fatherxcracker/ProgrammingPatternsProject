@@ -49,6 +49,20 @@ public class MenuView extends VBox {
         this.getChildren().addAll(tableView);
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
+
+        Button backBtn = new Button("Back");
+        HBox backHBox = new HBox(backBtn);
+        backHBox.setStyle("-fx-alignment: bottom-right;");
+
+        backBtn.setOnAction(e -> {
+            // Closes current window
+            this.getScene().getWindow().hide();
+
+            // Reopens main window
+            new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
+        });
+
+        this.getChildren().add(backHBox);
     }
 
     private void setupSearchButton(Button searchButton, TextField searchTF) {
