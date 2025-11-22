@@ -22,17 +22,18 @@ public class OrderView extends VBox {
         createTable();
         bindTableData();
 
-        HBox labelHBox = new HBox();
-        HBox searchHBox = new HBox();
         HBox radioButtonRBHBox = new HBox();
         Button searchButton = new Button("Search");
         TextField searchTF = new TextField();
         Label searchLabel = new Label("Search by Type of the Order: ");
         Label statusTGLabel = new Label("Option filter for Status of the Order: ");
+        Button backButton = new Button("Back");
+
+        HBox labelHBox = new HBox(searchLabel);
+        HBox searchHBox = new HBox(searchTF, searchButton);
+        HBox backHBox = new HBox(backButton);
 
         setupSearchButton(searchButton, searchTF);
-        labelHBox.getChildren().add(searchLabel);
-        searchHBox.getChildren().addAll(searchTF, searchButton);
 
         ToggleGroup statusCompletedOrUncompletedTG = new ToggleGroup();
         RadioButton uncompletedRB = new RadioButton("Uncompleted");
@@ -45,6 +46,7 @@ public class OrderView extends VBox {
         uncompletedRB.setOnAction(actionEvent -> handleUncompletedRB());
         completedRB.setOnAction(actionEvent -> handleCompletedRB());
         noneRB.setOnAction(actionEvent -> bindTableData());
+        backButton.setOnAction(actionEvent -> handleBack());
 
         noneRB.setSelected(true);
         completedRB.setSelected(false);
@@ -55,6 +57,7 @@ public class OrderView extends VBox {
         this.getChildren().add(labelHBox);
         this.getChildren().add(searchHBox);
         this.getChildren().add(tableView);
+        this.getChildren().add(backHBox);
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
     }
@@ -90,6 +93,14 @@ public class OrderView extends VBox {
                 .filter(e -> e.statusProperty().getValue().equals(true))
                 .toList();
         tableView.setItems(FXCollections.observableArrayList(filteredList));
+    }
+
+    private void handleBack() {
+        // Closes current window
+        this.getScene().getWindow().hide();
+
+        // Reopens main window
+        new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
     }
 
     private void createTable() {
