@@ -3,7 +3,7 @@ package com.example.sharpburgermanager.views;
 import com.example.sharpburgermanager.SharpBurgerManager;
 import com.example.sharpburgermanager.controllers.OrderController;
 import com.example.sharpburgermanager.models.OrderItem;
-import factories.OrderItemFactory;
+import com.example.sharpburgermanager.factories.OrderItemFactory;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -174,7 +174,7 @@ public class OrderView extends VBox {
     private void handleCompletedRB() {
         List<OrderItem> orderItemList = controller.getOrderItems();
         List<OrderItem> filteredList = orderItemList.stream()
-                .filter(e -> e.statusProperty().getValue().equals(true))
+                .filter(e -> e.statusProperty().getValue().equals(Optional.of(true)))
                 .toList();
         tableView.setItems(FXCollections.observableArrayList(filteredList));
     }

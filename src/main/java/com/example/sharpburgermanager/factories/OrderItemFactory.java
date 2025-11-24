@@ -1,6 +1,5 @@
-package factories;
+package com.example.sharpburgermanager.factories;
 
-import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.models.OrderItem;
 
 public class OrderItemFactory {

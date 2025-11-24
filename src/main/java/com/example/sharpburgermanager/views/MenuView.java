@@ -2,7 +2,7 @@ package com.example.sharpburgermanager.views;
 
 import com.example.sharpburgermanager.controllers.MenuController;
 import com.example.sharpburgermanager.models.MenuItem;
-import factories.MenuItemFactory;
+import com.example.sharpburgermanager.factories.MenuItemFactory;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
