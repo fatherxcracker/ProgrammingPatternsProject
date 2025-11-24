@@ -50,7 +50,7 @@ public class SharpBurgerManager extends Application {
         OrderView view = new OrderView(controller);
 
         Stage stage = new Stage();
-        stage.setScene(new Scene(view, 400, 300));
+        stage.setScene(new Scene(view, 700, 600));
         stage.setTitle("Order Item Management");
         stage.show();
         primaryStage.hide(); // Closes main window

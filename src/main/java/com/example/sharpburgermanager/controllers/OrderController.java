@@ -1,6 +1,6 @@
 package com.example.sharpburgermanager.controllers;
 
-import com.example.sharpburgermanager.models.MenuItem;
+import com.example.sharpburgermanager.models.OrderItem;
 import com.example.sharpburgermanager.models.OrderItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,18 +9,36 @@ import java.util.HashMap;
 
 public class OrderController {
     private final HashMap<Integer, OrderItem> orderMap;
+    private final ObservableList<OrderItem> orderItems;
 
     public OrderController() {
-        orderMap = new HashMap<>();
-        // This is sample data which will be replaced by a database later on
-        orderMap.put(Integer.valueOf(1), new OrderItem(1, "Classic Burger", "Burger", true,5.99));
-        orderMap.put(Integer.valueOf(2), new OrderItem(2, "Cheese Burger", "Burger", true,6.99));
-        orderMap.put(Integer.valueOf(3), new OrderItem(3, "French Fries", "Side", false,2.99));
-        orderMap.put(Integer.valueOf(4), new OrderItem(4, "Coke", "Drink", false,1.50));
+        orderMap = OrderItem.loadFromDatabase();
+        orderItems = FXCollections.observableArrayList(orderMap.values());
+
     }
 
     // Returns data for TableView as an ObservableList
     public ObservableList<OrderItem> getOrderItems() {
-        return FXCollections.observableArrayList(orderMap.values());
+        return orderItems;
+    }
+
+    public void addOrderItem(OrderItem item) {
+        OrderItem.addOrderItem(item); // saves to sharpburger database
+        orderMap.put(item.getId(), item); // updates HashMap
+        orderItems.add(item); // updates ObservableList for TableView
+    }
+
+    public void editOrderItem(OrderItem item) {
+        OrderItem.updateOrderItem(item); // Updates the Database
+        orderMap.put(item.getId(), item); // Updates HashMap
+        orderItems.setAll(orderMap.values());
+    }
+
+    public void deleteOrderItem(OrderItem item) {
+        if (item == null) return;
+
+        OrderItem.deleteOrderItem(item);
+        orderMap.remove(item.getId());
+        orderItems.remove(item);
     }
 }

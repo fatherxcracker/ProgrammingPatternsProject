@@ -142,6 +142,9 @@ public class MenuView extends VBox {
             }
         });
 
+        HBox editHBox = new HBox(10, editNameTF, editCategoryTF, editPriceTF, editButton);
+
+
         // Delete CRUD operation
 
         Label deleteLabel = new Label("Delete A Menu Item (Select It From The Table)");
@@ -158,9 +161,8 @@ public class MenuView extends VBox {
 
         HBox deleteHBox = new HBox(10, deleteButton);
 
-        HBox editHBox = new HBox(10, editNameTF, editCategoryTF, editPriceTF, editButton);
-
         // Back Button Code
+
 
         Button backBtn = new Button("Back");
         HBox backHBox = new HBox(backBtn);
