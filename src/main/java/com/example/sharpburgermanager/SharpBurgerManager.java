@@ -39,7 +39,7 @@ public class SharpBurgerManager extends Application {
         MenuView view = new MenuView(controller);
 
         Stage stage = new Stage();
-        stage.setScene(new Scene(view, 400, 300));
+        stage.setScene(new Scene(view, 700, 600));
         stage.setTitle("Menu Item Management");
         stage.show();
         primaryStage.hide(); // Closes main window
