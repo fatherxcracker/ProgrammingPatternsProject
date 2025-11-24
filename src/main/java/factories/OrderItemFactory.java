@@ -4,7 +4,7 @@ import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.models.OrderItem;
 
 public class OrderItemFactory {
-    private static final String[] validTypes = {"Drive-Thru", "Pick-up", "Delivery", "Uber-Eats"};
+    private static final String[] validTypes = {"Drive Thru", "Pick up", "Delivery", "Uber Eats", "Dine In"};
 
     public static OrderItem createOrderItem(String name, String type, boolean status, double price){
         if(!isValidType(type)){

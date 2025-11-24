@@ -1,15 +1,16 @@
 package com.example.sharpburgermanager.views;
 
+import com.example.sharpburgermanager.SharpBurgerManager;
 import com.example.sharpburgermanager.controllers.OrderController;
-import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.models.OrderItem;
-import factories.MenuItemFactory;
 import factories.OrderItemFactory;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.w3c.dom.Text;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +32,7 @@ public class OrderView extends VBox {
         createTable();
         bindTableData();
 
-        HBox radioButtonRBHBox = new HBox();
+
         Button searchButton = new Button("Search");
         TextField searchTF = new TextField();
         Label searchLabel = new Label("Search by Type of the Order: ");
@@ -46,23 +47,23 @@ public class OrderView extends VBox {
         setupSearchButton(searchButton, searchTF);
 
         // Radio Button Group
-        ToggleGroup statusCompletedOrUncompletedTG = new ToggleGroup();
-        RadioButton uncompletedRB = new RadioButton("Uncompleted");
-        uncompletedRB.setToggleGroup(statusCompletedOrUncompletedTG);
+        ToggleGroup statusCompletedOrIncompletedTG = new ToggleGroup();
+        RadioButton incompletedRB = new RadioButton("Incompleted");
+        incompletedRB.setToggleGroup(statusCompletedOrIncompletedTG);
         RadioButton completedRB = new RadioButton("Completed");
-        completedRB.setToggleGroup(statusCompletedOrUncompletedTG);
+        completedRB.setToggleGroup(statusCompletedOrIncompletedTG);
         RadioButton noneRB = new RadioButton("None");
-        noneRB.setToggleGroup(statusCompletedOrUncompletedTG);
+        noneRB.setToggleGroup(statusCompletedOrIncompletedTG);
 
-        uncompletedRB.setOnAction(actionEvent -> handleUncompletedRB());
+        incompletedRB.setOnAction(actionEvent -> handleIncompletedRB());
         completedRB.setOnAction(actionEvent -> handleCompletedRB());
         noneRB.setOnAction(actionEvent -> bindTableData());
         backButton.setOnAction(actionEvent -> handleBack());
 
         noneRB.setSelected(true);
         completedRB.setSelected(false);
-        uncompletedRB.setSelected(false);
-        radioButtonRBHBox.getChildren().addAll(noneRB, completedRB, uncompletedRB);
+        incompletedRB.setSelected(false);
+        HBox radioButtonRBHBox = new HBox(10, noneRB, completedRB, incompletedRB);
         // End of RBG
 
         // Add Operation Code
@@ -75,44 +76,7 @@ public class OrderView extends VBox {
         addPriceTF.setPromptText("Price");
 
         Button addButton = new Button("Add");
-        addButton.setOnAction(actionEvent -> {
-            try {
-                String name = addNameTF.getText();
-                String type = addTypeTF.getText();
-                double price = Double.parseDouble(addPriceTF.getText());
-
-                if (price < 0) {
-                    throw new IndexOutOfBoundsException();
-                }
-
-                boolean status;
-
-                Alert statusAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                statusAlert.setTitle("Order Status");
-                statusAlert.setHeaderText("Order Completed or Incomplete?");
-                statusAlert.setContentText("Is the Order completed or Incompleted? Press OK to say it's Completed or otherwise, Incompleted ");
-                Optional<ButtonType> result = statusAlert.showAndWait();
-
-                if (result.isPresent() && result.get() == ButtonType.OK) {
-                    status = true;
-                } else {
-                    status = false;
-                }
-
-                OrderItem orderItem = OrderItemFactory.createOrderItem(name, type, status, price);
-                controller.addOrderItem(orderItem);
-
-                addNameTF.clear();
-                addTypeTF.clear();
-                addPriceTF.clear();
-
-                showAlert(Alert.AlertType.INFORMATION, "Order Data added", "Order Has been added into the list.");
-
-            } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
-                showAlert(Alert.AlertType.ERROR, "Price is Negative", "The Price number must be positive or 0.");
-                addPriceTF.clear();
-            }
-        });
+        addButton.setOnAction(actionEvent -> handleAdd(addNameTF, addTypeTF, addPriceTF));
 
         HBox addLabelHBox = new HBox(addLabel);
         HBox addHBox = new HBox(10, addNameTF, addTypeTF, addPriceTF, addButton);
@@ -120,6 +84,7 @@ public class OrderView extends VBox {
         // Edit
         Label editLabel = new Label("Edit Order Item");
         Button editButton = new Button("Edit");
+
         TextField editNameTF = new TextField();
         editNameTF.setPromptText("Name");
         TextField editTypeTF = new TextField();
@@ -127,63 +92,36 @@ public class OrderView extends VBox {
         TextField editPriceTF = new TextField();
         editPriceTF.setPromptText("Price");
 
-        editButton.setOnAction(e -> {
-            com.example.sharpburgermanager.models.OrderItem selected = tableView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                try {
-                    String newName = editNameTF.getText();
-                    String newType = editTypeTF.getText();
-                    double newPrice = Double.parseDouble(editPriceTF.getText());
-                    boolean newStatus;
+        ToggleGroup editStatusTG = new ToggleGroup();
+        RadioButton editStatTrueRB = new RadioButton("Completed");
+        RadioButton editStatFalseRB = new RadioButton("Incompleted");
 
-                    Alert statusAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                    statusAlert.setTitle("Order Status");
-                    statusAlert.setHeaderText("Order Completed or Incomplete?");
-                    statusAlert.setContentText("Is the Order completed or Incompleted? Press OK to say it's Completed or otherwise, Incompleted.");
-                    Optional<ButtonType> result = statusAlert.showAndWait();
+        editStatFalseRB.setToggleGroup(editStatusTG);
+        editStatTrueRB.setToggleGroup(editStatusTG);
 
-                    if (result.isPresent() && result.get() == ButtonType.OK) {
-                        newStatus = true;
-                    } else {
-                        newStatus = false;
-                    }
-
-                    OrderItem validateItem = OrderItemFactory.createOrderItem(newName, newType, newStatus, newPrice);
-
-                    selected.nameProperty().set(validateItem.getName());
-                    selected.typeProperty().set(validateItem.getType());
-                    selected.priceProperty().set(validateItem.getPrice());
-                    selected.statusProperty().set(validateItem.statusProperty().get());
-
-                    controller.editOrderItem(selected); // Saves changes to our database
-                    bindTableData(); // refreshes the table
-
-                } catch (IllegalArgumentException iae) {
-                    showAlert(Alert.AlertType.ERROR, "IllegalArgumentException Occurred", iae.getMessage());
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    showAlert(Alert.AlertType.ERROR,"Exception Occurred", "Invalid input. Please enter valid values.");
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                editNameTF.setText(newSelection.getName());
+                editTypeTF.setText(newSelection.getType());
+                editPriceTF.setText(String.valueOf(newSelection.getPrice()));
+                if (newSelection.isStatus()) {
+                    editStatTrueRB.setSelected(true);
+                } else {
+                    editStatFalseRB.setSelected(true);
                 }
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Editing Error Occurred","Please select a menu item to edit.");
             }
         });
 
+        editButton.setOnAction(e -> handleEdit(editNameTF, editTypeTF, editPriceTF, editStatTrueRB));
+
         HBox editLabelHBox = new HBox(editLabel);
-        HBox editHBox = new HBox(10, editNameTF, editTypeTF, editPriceTF, editButton);
+        HBox editHBox = new HBox(10, editNameTF, editTypeTF, editPriceTF, editStatTrueRB, editStatFalseRB, editButton);
 
         // Delete
         Label deleteLabel = new Label("Delete A Menu Item (Select It From The Table)");
         Button deleteButton = new Button("Delete");
 
-        deleteButton.setOnAction(e -> {
-            OrderItem selected = tableView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                controller.deleteOrderItem(selected);
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Delete Exception Occurred", "Please select a menu item to delete.");
-            }
-        });
+        deleteButton.setOnAction(actionEvent -> handleDelete());
 
         HBox deleteLabelHBox = new HBox(deleteLabel);
         HBox deleteHBox = new HBox(10, deleteButton);
@@ -225,7 +163,7 @@ public class OrderView extends VBox {
         tableView.setItems(FXCollections.observableArrayList(filteredList));
     }
 
-    private void handleUncompletedRB() {
+    private void handleIncompletedRB() {
         List<OrderItem> orderItemList = controller.getOrderItems();
         List<OrderItem> filteredList = orderItemList.stream()
                 .filter(e -> !e.statusProperty().getValue())
@@ -246,7 +184,85 @@ public class OrderView extends VBox {
         this.getScene().getWindow().hide();
 
         // Reopens main window
-        new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
+        new SharpBurgerManager().start(new Stage());
+    }
+
+    private void handleAdd(TextField addNameTF, TextField addTypeTF, TextField addPriceTF) {
+        try {
+            String name = addNameTF.getText();
+            String type = addTypeTF.getText();
+            double price = Double.parseDouble(addPriceTF.getText());
+
+            if (price < 0) {
+                throw new IndexOutOfBoundsException();
+            }
+
+            boolean status;
+
+            Alert statusAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            statusAlert.setTitle("Order Status");
+            statusAlert.setHeaderText("Order Completed or Incomplete?");
+            statusAlert.setContentText("Is the Order completed or Incompleted? Press OK to say it's Completed or otherwise, Incompleted ");
+            Optional<ButtonType> result = statusAlert.showAndWait();
+
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                status = true;
+            } else {
+                status = false;
+            }
+
+            OrderItem orderItem = OrderItemFactory.createOrderItem(name, type, status, price);
+            controller.addOrderItem(orderItem);
+
+            addNameTF.clear();
+            addTypeTF.clear();
+            addPriceTF.clear();
+
+            showAlert(Alert.AlertType.INFORMATION, "Order Data added", "Order Has been added into the list.");
+
+        } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
+            showAlert(Alert.AlertType.ERROR, "Price is Negative", "The Price number must be positive or 0.");
+            addPriceTF.clear();
+        }
+    }
+
+    private void handleEdit(TextField editNameTF, TextField editTypeTF, TextField editPriceTF, RadioButton editStatTrueRB) {
+        OrderItem selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            try {
+                String newName = editNameTF.getText();
+                String newType = editTypeTF.getText();
+                double newPrice = Double.parseDouble(editPriceTF.getText());
+                boolean newStatus = editStatTrueRB.isSelected();
+
+                OrderItem validateItem = OrderItemFactory.createOrderItem(newName, newType, newStatus, newPrice);
+
+                selected.nameProperty().set(validateItem.getName());
+                selected.typeProperty().set(validateItem.getType());
+                selected.priceProperty().set(validateItem.getPrice());
+                selected.statusProperty().set(validateItem.statusProperty().get());
+
+                controller.editOrderItem(selected); // Saves changes to our database
+                bindTableData(); // refreshes the table
+
+            } catch (IllegalArgumentException iae) {
+                showAlert(Alert.AlertType.ERROR, "IllegalArgumentException Occurred", iae.getMessage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showAlert(Alert.AlertType.ERROR,"Exception Occurred", "Invalid input. Please enter valid values.");
+            }
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Editing Error Occurred","Please select a menu item to edit.");
+        }
+    }
+
+    private void handleDelete() {
+        OrderItem selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            controller.deleteOrderItem(selected);
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Delete Exception Occurred", "Please select a menu item to delete.");
+        }
     }
 
     private void createTable() {
@@ -268,7 +284,7 @@ public class OrderView extends VBox {
                 if (isRowEmpty || orderCompleted == null) {
                     setText(null);
                 } else {
-                    setText(orderCompleted ? "Completed" : "Uncompleted");
+                    setText(orderCompleted ? "Completed" : "Incompleted");
                 }
             }
         });

@@ -113,7 +113,7 @@ public class OrderItem {
     }
 
     public static void updateOrderItem(OrderItem item) {
-        String sql = "UPDATE orders SET name = ?, type = ?, status = ?, price = ?, WHERE id = ?";
+        String sql = "UPDATE orders SET name = ?, type = ?, status = ?, price = ? WHERE id = ?";
         try (Connection con = ConnectionManager.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
 
@@ -121,6 +121,7 @@ public class OrderItem {
             stmt.setString(2, item.getType());
             stmt.setBoolean(3, item.isStatus());
             stmt.setDouble(4, item.getPrice());
+            stmt.setInt(5, item.getId());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -129,7 +130,7 @@ public class OrderItem {
     }
 
     public static void deleteOrderItem(OrderItem item) {
-        String sql = "DELETE FROM menu WHERE id = ?";
+        String sql = "DELETE FROM orders WHERE id = ?";
         try (Connection con = ConnectionManager.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
 
