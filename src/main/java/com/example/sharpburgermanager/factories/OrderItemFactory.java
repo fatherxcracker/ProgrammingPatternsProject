@@ -7,7 +7,7 @@ public class OrderItemFactory {
 
     public static OrderItem createOrderItem(String name, String type, boolean status, double price){
         if(!isValidType(type)){
-            throw new IllegalArgumentException("Invalid Category: " + type);
+            throw new IllegalArgumentException("Invalid Category: " + type + "\nAcceptable Order Types: Drive Thru, Pick up, Delivery, Uber Eats and Dine In");
         }
 
         return new OrderItem(name, type, status, price);

@@ -1,5 +1,6 @@
 package com.example.sharpburgermanager.controllers;
 
+import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.models.OrderItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,7 +14,6 @@ public class OrderController {
     public OrderController() {
         orderMap = OrderItem.loadFromDatabase();
         orderItems = FXCollections.observableArrayList(orderMap.values());
-
     }
 
     // Returns data for TableView as an ObservableList
@@ -39,5 +39,16 @@ public class OrderController {
         OrderItem.deleteOrderItem(item);
         orderMap.remove(item.getId());
         orderItems.remove(item);
+    }
+
+    // Business Logic: Calculating frequency of menu items by type
+    public HashMap<String, Integer> getTypeFrequency() {
+        HashMap<String, Integer> freq = new HashMap<>();
+
+        for (OrderItem item : orderMap.values()) {
+            freq.merge(item.getType(), 1, Integer::sum);
+        }
+
+        return freq;
     }
 }

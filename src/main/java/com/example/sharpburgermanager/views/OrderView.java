@@ -5,13 +5,17 @@ import com.example.sharpburgermanager.controllers.OrderController;
 import com.example.sharpburgermanager.models.OrderItem;
 import com.example.sharpburgermanager.factories.OrderItemFactory;
 import javafx.collections.FXCollections;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.w3c.dom.Text;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +23,12 @@ public class OrderView extends VBox {
 
     private final TableView<OrderItem> tableView;
     private final OrderController controller;
+
+    private final XYChart.Data<String, Number> driveThruBar;
+    private final XYChart.Data<String, Number> pickUpBar;
+    private final XYChart.Data<String, Number> deliveryBar;
+    private final XYChart.Data<String, Number> uberEatsBar;
+    private final XYChart.Data<String, Number> dineInBar;
 
     public OrderView(OrderController controller) {
         Label titleLabel = new Label("SharpBurger Order Management");
@@ -31,7 +41,6 @@ public class OrderView extends VBox {
 
         createTable();
         bindTableData();
-
 
         Button searchButton = new Button("Search");
         TextField searchTF = new TextField();
@@ -126,6 +135,26 @@ public class OrderView extends VBox {
         HBox deleteLabelHBox = new HBox(deleteLabel);
         HBox deleteHBox = new HBox(10, deleteButton);
 
+        //Bar Graph
+        CategoryAxis categoryAxis = new CategoryAxis();
+        NumberAxis numberAxis = new NumberAxis();
+        BarChart<String, Number> barChart = new BarChart<>(categoryAxis, numberAxis);
+
+        XYChart.Series<String, Number> orderTypesSeries = new XYChart.Series<>();
+        orderTypesSeries.setName("Types of Orders");
+
+        driveThruBar = new XYChart.Data<>("Drive Thru", 0);
+        pickUpBar = new XYChart.Data<>("Pick Up", 0);
+        deliveryBar = new XYChart.Data<>("Delivery", 0);
+        uberEatsBar = new XYChart.Data<>("Uber Eats", 0);
+        dineInBar = new XYChart.Data<>("Dine In", 0);
+
+        orderTypesSeries.getData().addAll(
+                driveThruBar, pickUpBar, deliveryBar, uberEatsBar, dineInBar
+        );
+
+        barChart.getData().add(orderTypesSeries);
+
         // Finalizing
         this.getChildren().addAll(
                 titleHBox,
@@ -140,10 +169,21 @@ public class OrderView extends VBox {
                 editHBox,
                 deleteLabelHBox,
                 deleteHBox,
-                backHBox
+                backHBox,
+                barChart
         );
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
+    }
+
+    private void updateBarGraph() {
+        HashMap<String, Integer> freq = controller.getTypeFrequency();
+
+        driveThruBar.setYValue(freq.getOrDefault("Drive Thru", 0));
+        pickUpBar.setYValue(freq.getOrDefault("Pick Up", 0));
+        deliveryBar.setYValue(freq.getOrDefault("Delivery", 0));
+        uberEatsBar.setYValue(freq.getOrDefault("Uber Eats", 0));
+        dineInBar.setYValue(freq.getOrDefault("Dine In", 0));
     }
 
     private void setupSearchButton(Button searchButton, TextField searchTF) {
@@ -213,12 +253,14 @@ public class OrderView extends VBox {
 
             OrderItem orderItem = OrderItemFactory.createOrderItem(name, type, status, price);
             controller.addOrderItem(orderItem);
+            updateBarGraph();
 
             addNameTF.clear();
             addTypeTF.clear();
             addPriceTF.clear();
 
             showAlert(Alert.AlertType.INFORMATION, "Order Data added", "Order Has been added into the list.");
+
 
         } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
             showAlert(Alert.AlertType.ERROR, "Price is Negative", "The Price number must be positive or 0.");
@@ -244,6 +286,7 @@ public class OrderView extends VBox {
 
                 controller.editOrderItem(selected); // Saves changes to our database
                 bindTableData(); // refreshes the table
+                updateBarGraph();
 
             } catch (IllegalArgumentException iae) {
                 showAlert(Alert.AlertType.ERROR, "IllegalArgumentException Occurred", iae.getMessage());
@@ -260,6 +303,7 @@ public class OrderView extends VBox {
         OrderItem selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
             controller.deleteOrderItem(selected);
+            updateBarGraph();
         } else {
             showAlert(Alert.AlertType.ERROR, "Delete Exception Occurred", "Please select a menu item to delete.");
         }
@@ -299,6 +343,7 @@ public class OrderView extends VBox {
     private void bindTableData() {
         tableView.setItems(controller.getOrderItems());
     }
+
 
     // Utility method to display an alert dialog
     private void showAlert(Alert.AlertType type, String title, String message) {
