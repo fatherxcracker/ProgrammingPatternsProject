@@ -1,7 +1,6 @@
 package com.example.sharpburgermanager.controllers;
 
 import com.example.sharpburgermanager.models.OrderItem;
-import com.example.sharpburgermanager.models.OrderItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 

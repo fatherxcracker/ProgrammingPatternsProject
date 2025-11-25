@@ -4,11 +4,13 @@ import com.example.sharpburgermanager.controllers.MenuController;
 import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.factories.MenuItemFactory;
 import javafx.collections.FXCollections;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class MenuView extends VBox {
@@ -18,41 +20,101 @@ public class MenuView extends VBox {
 
     private final RadioButton categoryRB = new RadioButton("Category");
     private final RadioButton nameRB = new RadioButton("Name");
+    private PieChart categoryChart;
 
     public MenuView(MenuController controller) {
+        this.controller = controller;
+        this.tableView = new TableView<>();
+
+        createLayout();
+    }
+
+    // Building user interface layout
+    private void createLayout() {
         Label titleLabel = new Label("SharpBurger Menu Management");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         HBox titleHBox = new HBox(titleLabel);
         titleHBox.setStyle("-fx-alignment: center; -fx-padding: 0 0 10 0");
 
-        this.controller = controller;
-        this.tableView = new TableView<>();
-
         createTable();
         bindTableData();
 
-        // Search Box Code
+        categoryChart = new PieChart();
+        categoryChart.setTitle("Menu Items by Category");
+        categoryChart.setPrefSize(350, 250); // It is width x height
+        categoryChart.setMinSize(350, 250);
+        categoryChart.setMaxSize(350, 250);
+        categoryChart.lookup(".chart-title").setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        HBox labelSearchHBox = new HBox();
-        HBox searchHBox = new HBox(10);
-        HBox radioButtonHBox = new HBox(10);
-        Button searchButton = new Button("Search");
+        updateCategoryChart();
+
+        VBox searchSection = buildSearchSection();
+        VBox addSection = buildAddSection();
+        VBox editSection = buildEditSection();
+        VBox deleteSection = buildDeleteSection();
+        HBox backSection = buildBackSection();
+
+        this.getChildren().addAll(
+                titleHBox,
+                searchSection,
+                tableView,
+                addSection,
+                editSection,
+                deleteSection,
+                categoryChart,
+                backSection
+        );
+
+        this.setSpacing(15);
+        this.setStyle("-fx-padding: 20;");
+    }
+
+    // Handling searching code
+    private VBox buildSearchSection() {
+        Label searchLabel = new Label("Search by Category or Name:");
+        Label filterLabel = new Label("Search Filter:");
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+        categoryRB.setToggleGroup(toggleGroup);
+        nameRB.setToggleGroup(toggleGroup);
+
         TextField searchTF = new TextField();
-        Label searchLabel = new Label("Search by Category or Name of the Menu Item: ");
-        Label radioButtonLabel = new Label("Search Filter Option: ");
+        Button searchBtn = new Button("Search");
+        searchBtn.setOnAction(e -> handleSearch(searchTF.getText()));
 
-        ToggleGroup categoryOrNameTG = new ToggleGroup();
-        categoryRB.setToggleGroup(categoryOrNameTG);
-        nameRB.setToggleGroup(categoryOrNameTG);
+        Button showAllBtn = new Button("Show All");
+        showAllBtn.setOnAction(e -> {
+            searchTF.clear();
+            bindTableData(); // reloads everything
+        });
 
-        setupSearchButton(searchButton, searchTF);
+        HBox radioBox = new HBox(10, filterLabel, categoryRB, nameRB);
+        HBox searchBox = new HBox(10, searchTF, searchBtn, showAllBtn);
 
-        labelSearchHBox.getChildren().add(searchLabel);
-        radioButtonHBox.getChildren().addAll(radioButtonLabel, categoryRB, nameRB);
-        searchHBox.getChildren().addAll(searchTF, searchButton);
+        return new VBox(5, searchLabel, radioBox, searchBox);
+    }
 
-        // Add New Menu Item CRUD operation Code
+    private void handleSearch(String searchInput) {
+        if (searchInput == null || searchInput.isEmpty()) {
+            bindTableData();
+            return;
+        }
 
+        // So case in-sensitive
+        String lowerSearch = searchInput.toLowerCase();
+
+        List<MenuItem> list = controller.getMenuItems();
+        if (nameRB.isSelected()) {
+            tableView.setItems(FXCollections.observableArrayList(
+                    list.stream().filter(e -> e.getName().toLowerCase().contains(lowerSearch)).toList()));
+        } else if (categoryRB.isSelected()) {
+            tableView.setItems(FXCollections.observableArrayList(
+                    list.stream().filter(e -> e.getCategory().toLowerCase().contains(lowerSearch)).toList()));
+        }
+    }
+
+    // ADD CRUD Operation code
+    private VBox buildAddSection() {
         Label addLabel = new Label("Add New Menu Item");
 
         TextField nameTF = new TextField();
@@ -64,161 +126,138 @@ public class MenuView extends VBox {
         TextField priceTF = new TextField();
         priceTF.setPromptText("Price");
 
-        Button addButton = new Button("Add");
+        Button addBtn = new Button("Add");
+        addBtn.setOnAction(e -> handleAdd(nameTF, categoryTF, priceTF));
 
-        addButton.setOnAction(e -> {
-            try {
-                String name = nameTF.getText();
-                String category = categoryTF.getText();
-                double price = Double.parseDouble(priceTF.getText());
+        HBox addBox = new HBox(10, nameTF, categoryTF, priceTF, addBtn);
+        return new VBox(5, addLabel, addBox);
+    }
 
-                MenuItem newItem = MenuItemFactory.createMenuItem(name, category, price);
-                controller.addMenuItem(newItem);
+    private void handleAdd(TextField nameTF, TextField categoryTF, TextField priceTF) {
+        try {
+            double price = Double.parseDouble(priceTF.getText());
+            if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
 
-                bindTableData(); // refreshes the table
+            MenuItem item = MenuItemFactory.createMenuItem(
+                    nameTF.getText(), categoryTF.getText(), price);
 
-                nameTF.clear();
-                categoryTF.clear();
-                priceTF.clear();
+            controller.addMenuItem(item);
+            bindTableData();
+            updateCategoryChart();
 
-            } catch (IllegalArgumentException iae) {
-                showError(iae.getMessage());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                showError("Invalid input. Please enter valid values.");
-            }
-        });
+            nameTF.clear();
+            categoryTF.clear();
+            priceTF.clear();
 
-        HBox addHBox = new HBox(10, nameTF, categoryTF, priceTF, addButton);
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        } catch (Exception ex) {
+            showError("Invalid input. Enter proper values.");
+        }
+    }
 
-        // Edit CRUD Operation code
-
+    // EDIT CRUD Operation code
+    private VBox buildEditSection() {
         Label editLabel = new Label("Edit Selected Menu Item");
 
-        TextField editNameTF = new TextField();
-        editNameTF.setPromptText("Name");
+        TextField nameTF = new TextField();
+        nameTF.setPromptText("Name");
 
-        TextField editCategoryTF = new TextField();
-        editCategoryTF.setPromptText("Category");
+        TextField categoryTF = new TextField();
+        categoryTF.setPromptText("Category");
 
-        TextField editPriceTF = new TextField();
-        editPriceTF.setPromptText("Price");
+        TextField priceTF = new TextField();
+        priceTF.setPromptText("Price");
 
-        Button editButton = new Button("Edit");
+        Button editBtn = new Button("Edit");
+        editBtn.setOnAction(e -> handleEdit(nameTF, categoryTF, priceTF));
 
-        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                editNameTF.setText(newSelection.getName());
-                editCategoryTF.setText(newSelection.getCategory());
-                editPriceTF.setText(String.valueOf(newSelection.getPrice()));
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
+            if (newV != null) {
+                nameTF.setText(newV.getName());
+                categoryTF.setText(newV.getCategory());
+                priceTF.setText(String.valueOf(newV.getPrice()));
             }
         });
 
-        editButton.setOnAction(e -> {
-            MenuItem selected = tableView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                try {
-                    String newName = editNameTF.getText();
-                    String newCategory = editCategoryTF.getText();
-                    double newPrice = Double.parseDouble(editPriceTF.getText());
-
-                    MenuItem validateItem = MenuItemFactory.createMenuItem(newName, newCategory, newPrice);
-
-                    selected.nameProperty().set(validateItem.getName());
-                    selected.categoryProperty().set(validateItem.getCategory());
-                    selected.priceProperty().set(validateItem.getPrice());
-
-                    controller.editMenuItem(selected); // Saves changes to our database
-                    bindTableData(); // refreshes the table
-
-                } catch (IllegalArgumentException iae) {
-                    showError(iae.getMessage());
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    showError("Invalid input. Please enter valid values.");
-                }
-            } else {
-                showError("Please select a menu item to edit.");
-            }
-        });
-
-        HBox editHBox = new HBox(10, editNameTF, editCategoryTF, editPriceTF, editButton);
-
-
-        // Delete CRUD operation
-
-        Label deleteLabel = new Label("Delete A Menu Item (Select It From The Table)");
-        Button deleteButton = new Button("Delete");
-
-        deleteButton.setOnAction(e -> {
-            MenuItem selected = tableView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                controller.deleteMenuItem(selected);
-            } else {
-                showError("Please select a menu item to delete.");
-            }
-        });
-
-        HBox deleteHBox = new HBox(10, deleteButton);
-
-        // Back Button Code
-
-
-        Button backBtn = new Button("Back");
-        HBox backHBox = new HBox(backBtn);
-        backHBox.setStyle("-fx-alignment: bottom-right;");
-
-        backBtn.setOnAction(e -> {
-            // Closes current window
-            this.getScene().getWindow().hide();
-
-            // Reopens main window
-            new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
-        });
-
-        this.getChildren().addAll(
-                titleHBox,
-                labelSearchHBox,
-                radioButtonHBox,
-                searchHBox,
-                tableView,
-                addLabel,
-                addHBox,
-                editLabel,
-                editHBox,
-                deleteLabel,
-                deleteHBox,
-                backHBox
-        );
-
-        this.setSpacing(15);
-        this.setStyle("-fx-padding: 20;");
+        HBox editBox = new HBox(10, nameTF, categoryTF, priceTF, editBtn);
+        return new VBox(5, editLabel, editBox);
     }
 
-    private void setupSearchButton(Button searchButton, TextField searchTF) {
-        searchButton.setOnAction(event -> handleSearch(searchTF.getText()));
-    }
-
-    private void handleSearch(String searchInput) {
-        if (searchInput == null || searchInput.isEmpty()) {
-            bindTableData();
+    private void handleEdit(TextField nameTF, TextField categoryTF, TextField priceTF) {
+        MenuItem selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Select an item to edit.");
             return;
         }
+        try {
+            double price = Double.parseDouble(priceTF.getText());
+            if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
 
-        List<MenuItem> menuItemList = controller.getMenuItems();
-        if (nameRB.isSelected()) {
-            List<MenuItem> filteredList = menuItemList.stream()
-                    .filter(e -> e.nameProperty().getValue().contains(searchInput))
-                    .toList();
-            tableView.setItems(FXCollections.observableArrayList(filteredList));
-        } else if (categoryRB.isSelected()) {
-            List<MenuItem> filteredList = menuItemList.stream()
-                    .filter(e -> e.categoryProperty().getValue().contains(searchInput))
-                    .toList();
-            tableView.setItems(FXCollections.observableArrayList(filteredList));
+            MenuItem validated = MenuItemFactory.createMenuItem(
+                    nameTF.getText(), categoryTF.getText(), price);
+
+            selected.nameProperty().set(validated.getName());
+            selected.categoryProperty().set(validated.getCategory());
+            selected.priceProperty().set(validated.getPrice());
+
+            controller.editMenuItem(selected);
+            bindTableData();
+            updateCategoryChart();
+
+        } catch (IllegalArgumentException ex) {
+            showError(ex.getMessage());
+        } catch (Exception ex) {
+            showError("Invalid input. Enter proper values.");
         }
     }
 
+    // DELETE CRUD Operation code
+    private VBox buildDeleteSection() {
+        Label delLabel = new Label("Delete Selected Menu Item");
+        Button deleteBtn = new Button("Delete");
+
+        deleteBtn.setOnAction(e -> handleDelete());
+
+        return new VBox(5, delLabel, new HBox(10, deleteBtn));
+    }
+
+    private void handleDelete() {
+        MenuItem selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Select an item to delete.");
+            return;
+        }
+        controller.deleteMenuItem(selected);
+        bindTableData();
+        updateCategoryChart();
+    }
+
+    // Back button code
+    private HBox buildBackSection() {
+        Button backBtn = new Button("Back");
+        backBtn.setOnAction(e -> {
+            this.getScene().getWindow().hide();
+            new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
+        });
+        HBox box = new HBox(backBtn);
+        box.setStyle("-fx-alignment: bottom-right;");
+        return box;
+    }
+
+    // Pie Chart
+    private void updateCategoryChart() {
+        HashMap<String, Integer> freq = controller.getCategoryFrequency();
+
+        PieChart.Data[] data = freq.entrySet()
+                .stream()
+                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                .toArray(PieChart.Data[]::new);
+
+        categoryChart.setData(FXCollections.observableArrayList(data));
+    }
+
+    // Making Table
     private void createTable() {
         TableColumn<MenuItem, Integer> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));

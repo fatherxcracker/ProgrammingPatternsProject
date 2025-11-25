@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 24, 2025 at 01:00 AM
+-- Generation Time: Nov 25, 2025 at 06:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -33,14 +33,6 @@ CREATE TABLE `menu` (
   `category` varchar(50) NOT NULL,
   `price` double(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `menu`
---
-
-INSERT INTO `menu` (`id`, `name`, `category`, `price`) VALUES
-(1, 'Cheese Burger', 'Burgers', 9.50),
-(2, 'Coca Cola', 'Beverages', 2.50);
 
 -- --------------------------------------------------------
 
@@ -80,7 +72,7 @@ ALTER TABLE `orders`
 -- AUTO_INCREMENT for table `menu`
 --
 ALTER TABLE `menu`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `orders`
