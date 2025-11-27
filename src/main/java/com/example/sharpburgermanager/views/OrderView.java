@@ -135,7 +135,7 @@ public class OrderView extends VBox {
         HBox deleteLabelHBox = new HBox(deleteLabel);
         HBox deleteHBox = new HBox(10, deleteButton);
 
-        //Bar Graph
+        //Bar Graph (Based on Types)
         CategoryAxis categoryAxis = new CategoryAxis();
         NumberAxis numberAxis = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(categoryAxis, numberAxis);
