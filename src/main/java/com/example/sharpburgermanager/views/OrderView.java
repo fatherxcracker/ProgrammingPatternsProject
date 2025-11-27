@@ -174,6 +174,8 @@ public class OrderView extends VBox {
         );
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
+
+        updateBarGraph();
     }
 
     private void updateBarGraph() {
