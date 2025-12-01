@@ -5,10 +5,7 @@ import com.example.sharpburgermanager.controllers.OrderController;
 import com.example.sharpburgermanager.models.OrderItem;
 import com.example.sharpburgermanager.factories.OrderItemFactory;
 import javafx.collections.FXCollections;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -24,11 +21,16 @@ public class OrderView extends VBox {
     private final TableView<OrderItem> tableView;
     private final OrderController controller;
 
-    private final XYChart.Data<String, Number> driveThruBar;
-    private final XYChart.Data<String, Number> pickUpBar;
-    private final XYChart.Data<String, Number> deliveryBar;
-    private final XYChart.Data<String, Number> uberEatsBar;
-    private final XYChart.Data<String, Number> dineInBar;
+    private XYChart.Data<String, Number> driveThruBarCompleted;
+    private XYChart.Data<String, Number> driveThruBarIncompleted;
+    private XYChart.Data<String, Number> pickUpBarCompleted;
+    private XYChart.Data<String, Number> pickUpBarIncompleted;
+    private XYChart.Data<String, Number> deliveryBarCompleted;
+    private XYChart.Data<String, Number> deliveryBarIncompleted;
+    private XYChart.Data<String, Number> uberEatsBarCompleted;
+    private XYChart.Data<String, Number> uberEatsBarIncompleted;
+    private XYChart.Data<String, Number> dineInBarCompleted;
+    private XYChart.Data<String, Number> dineInBarIncompleted;
 
     public OrderView(OrderController controller) {
         Label titleLabel = new Label("SharpBurger Order Management");
@@ -41,6 +43,8 @@ public class OrderView extends VBox {
 
         createTable();
         bindTableData();
+
+        controller.setTypeUpdateCallback(freqMap -> updateBarGraph());
 
         Button searchButton = new Button("Search");
         TextField searchTF = new TextField();
@@ -135,25 +139,39 @@ public class OrderView extends VBox {
         HBox deleteLabelHBox = new HBox(deleteLabel);
         HBox deleteHBox = new HBox(10, deleteButton);
 
-        //Bar Graph (Based on Types)
+        //Bar Graph (Based on Status)
         CategoryAxis categoryAxis = new CategoryAxis();
         NumberAxis numberAxis = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(categoryAxis, numberAxis);
 
-        XYChart.Series<String, Number> orderTypesSeries = new XYChart.Series<>();
-        orderTypesSeries.setName("Types of Orders");
+        XYChart.Series<String, Number> completedSeries = new XYChart.Series<>();
+        completedSeries.setName("Completed");
 
-        driveThruBar = new XYChart.Data<>("Drive Thru", 0);
-        pickUpBar = new XYChart.Data<>("Pick Up", 0);
-        deliveryBar = new XYChart.Data<>("Delivery", 0);
-        uberEatsBar = new XYChart.Data<>("Uber Eats", 0);
-        dineInBar = new XYChart.Data<>("Dine In", 0);
+        XYChart.Series<String, Number> incompletedSeries = new XYChart.Series<>();
+        incompletedSeries.setName("Incompleted");
 
-        orderTypesSeries.getData().addAll(
-                driveThruBar, pickUpBar, deliveryBar, uberEatsBar, dineInBar
+        driveThruBarCompleted = new XYChart.Data<>("Drive Thru", 0);
+        driveThruBarIncompleted = new XYChart.Data<>("Drive Thru", 0);
+        pickUpBarCompleted = new XYChart.Data<>("Pick Up", 0);
+        pickUpBarIncompleted = new XYChart.Data<>("Pick Up", 0);
+        deliveryBarCompleted = new XYChart.Data<>("Delivery", 0);
+        deliveryBarIncompleted = new XYChart.Data<>("Delivery", 0);
+        uberEatsBarCompleted = new XYChart.Data<>("Uber Eats", 0);
+        uberEatsBarIncompleted = new XYChart.Data<>("Uber Eats", 0);
+        dineInBarCompleted = new XYChart.Data<>("Dine In", 0);
+        dineInBarIncompleted = new XYChart.Data<>("Dine In", 0);
+
+
+
+        completedSeries.getData().addAll(
+                driveThruBarCompleted, pickUpBarCompleted, deliveryBarCompleted, uberEatsBarCompleted, dineInBarCompleted
         );
 
-        barChart.getData().add(orderTypesSeries);
+        incompletedSeries.getData().addAll(
+                driveThruBarIncompleted, pickUpBarIncompleted, deliveryBarIncompleted, uberEatsBarIncompleted, dineInBarIncompleted
+        );
+
+        barChart.getData().addAll(completedSeries, incompletedSeries);
 
         // Finalizing
         this.getChildren().addAll(
@@ -179,13 +197,22 @@ public class OrderView extends VBox {
     }
 
     private void updateBarGraph() {
-        HashMap<String, Integer> freq = controller.getTypeFrequency();
+        HashMap<String, Integer> freq = controller.getStatusFrequency();
 
-        driveThruBar.setYValue(freq.getOrDefault("Drive Thru", 0));
-        pickUpBar.setYValue(freq.getOrDefault("Pick Up", 0));
-        deliveryBar.setYValue(freq.getOrDefault("Delivery", 0));
-        uberEatsBar.setYValue(freq.getOrDefault("Uber Eats", 0));
-        dineInBar.setYValue(freq.getOrDefault("Dine In", 0));
+        driveThruBarCompleted.setYValue(freq.getOrDefault("Drive Thru-Completed", 0));
+        driveThruBarIncompleted.setYValue(freq.getOrDefault("Drive Thru-Incompleted", 0));
+
+        pickUpBarCompleted.setYValue(freq.getOrDefault("Pick Up-Completed", 0));
+        pickUpBarIncompleted.setYValue(freq.getOrDefault("Pick Up-Incompleted", 0));
+
+        deliveryBarCompleted.setYValue(freq.getOrDefault("Delivery-Completed", 0));
+        deliveryBarIncompleted.setYValue(freq.getOrDefault("Delivery-Incompleted", 0));
+
+        uberEatsBarCompleted.setYValue(freq.getOrDefault("Uber Eats-Completed", 0));
+        uberEatsBarIncompleted.setYValue(freq.getOrDefault("Uber Eats-Incompleted", 0));
+
+        dineInBarCompleted.setYValue(freq.getOrDefault("Dine In-Completed", 0));
+        dineInBarIncompleted.setYValue(freq.getOrDefault("Dine In-Incompleted", 0));
     }
 
     private void setupSearchButton(Button searchButton, TextField searchTF) {
