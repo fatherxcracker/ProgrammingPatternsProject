@@ -15,7 +15,10 @@ public class MenuItemFactory {
             if (c.equalsIgnoreCase(category))
                 return c;
         }
-        throw new IllegalArgumentException("Invalid Category: " + category);
+        String valid = String.join(", ", validCategories);
+        throw new IllegalArgumentException(
+                "Invalid Category: " + category + ",\nValid categories are:\n" + valid
+        );
     }
 
 }

@@ -3,6 +3,7 @@ package com.example.sharpburgermanager.views;
 import com.example.sharpburgermanager.controllers.MenuController;
 import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.factories.MenuItemFactory;
+import com.example.sharpburgermanager.threads.CategoryCountThread;
 import javafx.collections.FXCollections;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
@@ -25,6 +26,14 @@ public class MenuView extends VBox {
     public MenuView(MenuController controller) {
         this.controller = controller;
         this.tableView = new TableView<>();
+
+        controller.setCategoryUpdateCallback(freqMap -> {
+            PieChart.Data[] data = freqMap.entrySet()
+                    .stream()
+                    .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                    .toArray(PieChart.Data[]::new);
+            categoryChart.setData(FXCollections.observableArrayList(data));
+        });
 
         createLayout();
     }
@@ -245,17 +254,22 @@ public class MenuView extends VBox {
         return box;
     }
 
-    // Pie Chart
+    // Pie Chart (now recalculates in the background)
     private void updateCategoryChart() {
-        HashMap<String, Integer> freq = controller.getCategoryFrequency();
+        CategoryCountThread worker = new CategoryCountThread(
+                controller.getMenuItems(),
+                resultMap -> {
+                    PieChart.Data[] data = resultMap.entrySet()
+                            .stream()
+                            .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                            .toArray(PieChart.Data[]::new);
 
-        PieChart.Data[] data = freq.entrySet()
-                .stream()
-                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
-                .toArray(PieChart.Data[]::new);
-
-        categoryChart.setData(FXCollections.observableArrayList(data));
+                    categoryChart.setData(FXCollections.observableArrayList(data));
+                }
+        );
+        worker.start();
     }
+
 
     // Making Table
     private void createTable() {
