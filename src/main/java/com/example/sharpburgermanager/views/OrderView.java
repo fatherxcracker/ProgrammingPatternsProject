@@ -12,6 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -21,16 +22,16 @@ public class OrderView extends VBox {
     private final TableView<OrderItem> tableView;
     private final OrderController controller;
 
-    private XYChart.Data<String, Number> driveThruBarCompleted;
-    private XYChart.Data<String, Number> driveThruBarIncompleted;
-    private XYChart.Data<String, Number> pickUpBarCompleted;
-    private XYChart.Data<String, Number> pickUpBarIncompleted;
-    private XYChart.Data<String, Number> deliveryBarCompleted;
-    private XYChart.Data<String, Number> deliveryBarIncompleted;
-    private XYChart.Data<String, Number> uberEatsBarCompleted;
-    private XYChart.Data<String, Number> uberEatsBarIncompleted;
-    private XYChart.Data<String, Number> dineInBarCompleted;
-    private XYChart.Data<String, Number> dineInBarIncompleted;
+    private final XYChart.Data<String, Number> driveThruBarCompleted;
+    private final XYChart.Data<String, Number> driveThruBarIncompleted;
+    private final XYChart.Data<String, Number> pickUpBarCompleted;
+    private final XYChart.Data<String, Number> pickUpBarIncompleted;
+    private final XYChart.Data<String, Number> deliveryBarCompleted;
+    private final XYChart.Data<String, Number> deliveryBarIncompleted;
+    private final XYChart.Data<String, Number> uberEatsBarCompleted;
+    private final XYChart.Data<String, Number> uberEatsBarIncompleted;
+    private final XYChart.Data<String, Number> dineInBarCompleted;
+    private final XYChart.Data<String, Number> dineInBarIncompleted;
 
     public OrderView(OrderController controller) {
         Label titleLabel = new Label("SharpBurger Order Management");
@@ -47,17 +48,19 @@ public class OrderView extends VBox {
         controller.setTypeUpdateCallback(freqMap -> updateBarGraph());
 
         Button searchButton = new Button("Search");
+//        Button showAllButton = new Button("Show All");
         TextField searchTF = new TextField();
         Label searchLabel = new Label("Search by Type of the Order: ");
         Label statusTGLabel = new Label("Option filter for Status of the Order: ");
         Button backButton = new Button("Back");
 
         HBox labelHBox = new HBox(searchLabel);
-        HBox searchHBox = new HBox(searchTF, searchButton);
+        HBox searchHBox = new HBox(10, searchTF, searchButton);
         HBox backHBox = new HBox(backButton);
         backHBox.setStyle("-fx-alignment: bottom-right;");
 
         setupSearchButton(searchButton, searchTF);
+//        showAllButton.setOnAction(actionEvent -> bindTableData());
 
         // Radio Button Group
         ToggleGroup statusCompletedOrIncompletedTG = new ToggleGroup();
@@ -70,7 +73,6 @@ public class OrderView extends VBox {
 
         incompletedRB.setOnAction(actionEvent -> handleIncompletedRB());
         completedRB.setOnAction(actionEvent -> handleCompletedRB());
-        noneRB.setOnAction(actionEvent -> bindTableData());
         backButton.setOnAction(actionEvent -> handleBack());
 
         noneRB.setSelected(true);
@@ -79,31 +81,15 @@ public class OrderView extends VBox {
         HBox radioButtonRBHBox = new HBox(10, noneRB, completedRB, incompletedRB);
         // End of RBG
 
-        // Add Operation Code
-        Label addLabel = new Label("Add New Order Item");
-        TextField addNameTF = new TextField();
-        addNameTF.setPromptText("Name");
-        TextField addTypeTF = new TextField();
-        addTypeTF.setPromptText("Type");
-        TextField addPriceTF = new TextField();
-        addPriceTF.setPromptText("Price");
-
-        Button addButton = new Button("Add");
-        addButton.setOnAction(actionEvent -> handleAdd(addNameTF, addTypeTF, addPriceTF));
-
-        HBox addLabelHBox = new HBox(addLabel);
-        HBox addHBox = new HBox(10, addNameTF, addTypeTF, addPriceTF, addButton);
-
-        // Edit
-        Label editLabel = new Label("Edit Order Item");
-        Button editButton = new Button("Edit");
-
-        TextField editNameTF = new TextField();
-        editNameTF.setPromptText("Name");
-        TextField editTypeTF = new TextField();
-        editTypeTF.setPromptText("Type");
-        TextField editPriceTF = new TextField();
-        editPriceTF.setPromptText("Price");
+        // Add and Edit Operation Code
+        Label orderLabel = new Label("Add a new Order Item, select a row to update its data or delete A Order Item (Select It From The Table)");
+        TextField nameTF = new TextField();
+        nameTF.setPromptText("Name");
+        TextField typeTF = new TextField();
+        typeTF.setPromptText("Type");
+        TextField priceTF = new TextField();
+        priceTF.setPromptText("Price");
+        Button editButton = new Button("Update");
 
         ToggleGroup editStatusTG = new ToggleGroup();
         RadioButton editStatTrueRB = new RadioButton("Completed");
@@ -112,11 +98,22 @@ public class OrderView extends VBox {
         editStatFalseRB.setToggleGroup(editStatusTG);
         editStatTrueRB.setToggleGroup(editStatusTG);
 
+        Button addButton = new Button("Add");
+        addButton.setOnAction(actionEvent -> handleAdd(nameTF, typeTF, priceTF, editStatTrueRB));
+
+        // Delete
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnAction(actionEvent -> handleDelete());
+
+        HBox addLabelHBox = new HBox(orderLabel);
+        HBox addHBox = new HBox(10, nameTF, typeTF, priceTF, editStatTrueRB, editStatFalseRB, addButton, editButton, deleteButton);
+
+
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                editNameTF.setText(newSelection.getName());
-                editTypeTF.setText(newSelection.getType());
-                editPriceTF.setText(String.valueOf(newSelection.getPrice()));
+                nameTF.setText(newSelection.getName());
+                typeTF.setText(newSelection.getType());
+                priceTF.setText(String.valueOf(newSelection.getPrice()));
                 if (newSelection.isStatus()) {
                     editStatTrueRB.setSelected(true);
                 } else {
@@ -125,19 +122,7 @@ public class OrderView extends VBox {
             }
         });
 
-        editButton.setOnAction(e -> handleEdit(editNameTF, editTypeTF, editPriceTF, editStatTrueRB));
-
-        HBox editLabelHBox = new HBox(editLabel);
-        HBox editHBox = new HBox(10, editNameTF, editTypeTF, editPriceTF, editStatTrueRB, editStatFalseRB, editButton);
-
-        // Delete
-        Label deleteLabel = new Label("Delete A Menu Item (Select It From The Table)");
-        Button deleteButton = new Button("Delete");
-
-        deleteButton.setOnAction(actionEvent -> handleDelete());
-
-        HBox deleteLabelHBox = new HBox(deleteLabel);
-        HBox deleteHBox = new HBox(10, deleteButton);
+        editButton.setOnAction(e -> handleEdit(nameTF, typeTF, priceTF, editStatTrueRB));
 
         //Bar Graph (Based on Status)
         CategoryAxis categoryAxis = new CategoryAxis();
@@ -161,17 +146,16 @@ public class OrderView extends VBox {
         dineInBarCompleted = new XYChart.Data<>("Dine In", 0);
         dineInBarIncompleted = new XYChart.Data<>("Dine In", 0);
 
-
-
         completedSeries.getData().addAll(
-                driveThruBarCompleted, pickUpBarCompleted, deliveryBarCompleted, uberEatsBarCompleted, dineInBarCompleted
+                Arrays.asList(driveThruBarCompleted, pickUpBarCompleted, deliveryBarCompleted, uberEatsBarCompleted, dineInBarCompleted)
         );
 
         incompletedSeries.getData().addAll(
-                driveThruBarIncompleted, pickUpBarIncompleted, deliveryBarIncompleted, uberEatsBarIncompleted, dineInBarIncompleted
+                Arrays.asList(driveThruBarIncompleted, pickUpBarIncompleted, deliveryBarIncompleted, uberEatsBarIncompleted, dineInBarIncompleted)
         );
 
-        barChart.getData().addAll(completedSeries, incompletedSeries);
+        barChart.getData().addAll(Arrays.asList(completedSeries, incompletedSeries));
+        barChart.setTitle("Completed vs Incompleted Orders by Order Type");
 
         // Finalizing
         this.getChildren().addAll(
@@ -183,12 +167,8 @@ public class OrderView extends VBox {
                 tableView,
                 addLabelHBox,
                 addHBox,
-                editLabelHBox,
-                editHBox,
-                deleteLabelHBox,
-                deleteHBox,
-                backHBox,
-                barChart
+                barChart,
+                backHBox
         );
         this.setSpacing(10);
         this.setStyle("-fx-padding: 20;");
@@ -256,44 +236,30 @@ public class OrderView extends VBox {
         new SharpBurgerManager().start(new Stage());
     }
 
-    private void handleAdd(TextField addNameTF, TextField addTypeTF, TextField addPriceTF) {
+    private void handleAdd(TextField nameTF, TextField typeTF, TextField priceTF, RadioButton radioButtonTrue) {
         try {
-            String name = addNameTF.getText();
-            String type = addTypeTF.getText();
-            double price = Double.parseDouble(addPriceTF.getText());
+            String name = nameTF.getText();
+            String type = typeTF.getText();
+            double price = Double.parseDouble(priceTF.getText());
 
             if (price < 0) {
                 throw new IndexOutOfBoundsException();
             }
 
-            boolean status;
-
-            Alert statusAlert = new Alert(Alert.AlertType.CONFIRMATION);
-            statusAlert.setTitle("Order Status");
-            statusAlert.setHeaderText("Order Completed or Incomplete?");
-            statusAlert.setContentText("Is the Order completed or Incompleted? Press OK to say it's Completed or otherwise, Incompleted ");
-            Optional<ButtonType> result = statusAlert.showAndWait();
-
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                status = true;
-            } else {
-                status = false;
-            }
+            boolean status = radioButtonTrue.isSelected();
 
             OrderItem orderItem = OrderItemFactory.createOrderItem(name, type, status, price);
             controller.addOrderItem(orderItem);
             updateBarGraph();
 
-            addNameTF.clear();
-            addTypeTF.clear();
-            addPriceTF.clear();
+            nameTF.clear();
+            typeTF.clear();
+            priceTF.clear();
 
-            showAlert(Alert.AlertType.INFORMATION, "Order Data added", "Order Has been added into the list.");
-
-
+            showAlert(Alert.AlertType.INFORMATION, "Order Data added", "Order, " +  orderItem.getName() + " Has been added into the list.");
         } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
             showAlert(Alert.AlertType.ERROR, "Price is Negative", "The Price number must be positive or 0.");
-            addPriceTF.clear();
+            priceTF.clear();
         }
     }
 

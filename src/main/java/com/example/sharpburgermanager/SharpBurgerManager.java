@@ -17,7 +17,7 @@ public class SharpBurgerManager extends Application {
     public void start(Stage primaryStage) {
         Label titleLabel = new Label("Welcome to the SharpBurger Manager");
         Button menuBtn = new Button("Menu Item Management");
-        Button orderBtn = new Button("Order Management");
+        Button orderBtn = new Button("Order Item Management");
         Button exitButton = new Button("Exit");
 
         menuBtn.setOnAction(e -> openMenuWindow(primaryStage));
@@ -50,7 +50,7 @@ public class SharpBurgerManager extends Application {
         OrderView view = new OrderView(controller);
 
         Stage stage = new Stage();
-        stage.setScene(new Scene(view, 800, 1000));
+        stage.setScene(new Scene(view, 950, 1000));
         stage.setTitle("Order Item Management");
         stage.show();
         primaryStage.hide(); // Closes main window
