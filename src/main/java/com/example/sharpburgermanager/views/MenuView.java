@@ -58,18 +58,14 @@ public class MenuView extends VBox {
         updateCategoryChart();
 
         VBox searchSection = buildSearchSection();
-        VBox addSection = buildAddSection();
-        VBox editSection = buildEditSection();
-        VBox deleteSection = buildDeleteSection();
+        VBox crudSection = buildCRUDSection();
         HBox backSection = buildBackSection();
 
         this.getChildren().addAll(
                 titleHBox,
                 searchSection,
                 tableView,
-                addSection,
-                editSection,
-                deleteSection,
+                crudSection,
                 categoryChart,
                 backSection
         );
@@ -122,64 +118,20 @@ public class MenuView extends VBox {
         }
     }
 
-    // ADD CRUD Operation code
-    private VBox buildAddSection() {
-        Label addLabel = new Label("Add New Menu Item");
+    private VBox buildCRUDSection() {
+        Label crudLabel = new Label("Manage Menu Items");
 
         TextField nameTF = new TextField();
         nameTF.setPromptText("Name");
+        nameTF.setPrefWidth(150);
 
         TextField categoryTF = new TextField();
         categoryTF.setPromptText("Category");
+        categoryTF.setPrefWidth(150);
 
         TextField priceTF = new TextField();
         priceTF.setPromptText("Price");
-
-        Button addBtn = new Button("Add");
-        addBtn.setOnAction(e -> handleAdd(nameTF, categoryTF, priceTF));
-
-        HBox addBox = new HBox(10, nameTF, categoryTF, priceTF, addBtn);
-        return new VBox(5, addLabel, addBox);
-    }
-
-    private void handleAdd(TextField nameTF, TextField categoryTF, TextField priceTF) {
-        try {
-            double price = Double.parseDouble(priceTF.getText());
-            if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
-
-            MenuItem item = MenuItemFactory.createMenuItem(
-                    nameTF.getText(), categoryTF.getText(), price);
-
-            controller.addMenuItem(item);
-            bindTableData();
-            updateCategoryChart();
-
-            nameTF.clear();
-            categoryTF.clear();
-            priceTF.clear();
-
-        } catch (IllegalArgumentException ex) {
-            showError(ex.getMessage());
-        } catch (Exception ex) {
-            showError("Invalid input. Enter proper values.");
-        }
-    }
-
-    // EDIT CRUD Operation code
-    private VBox buildEditSection() {
-        Label editLabel = new Label("Edit Selected Menu Item");
-
-        TextField nameTF = new TextField();
-        nameTF.setPromptText("Name");
-
-        TextField categoryTF = new TextField();
-        categoryTF.setPromptText("Category");
-
-        TextField priceTF = new TextField();
-        priceTF.setPromptText("Price");
-
-        Button editBtn = new Button("Edit");
-        editBtn.setOnAction(e -> handleEdit(nameTF, categoryTF, priceTF));
+        priceTF.setPrefWidth(100);
 
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null) {
@@ -189,57 +141,85 @@ public class MenuView extends VBox {
             }
         });
 
-        HBox editBox = new HBox(10, nameTF, categoryTF, priceTF, editBtn);
-        return new VBox(5, editLabel, editBox);
-    }
+        // Add button
+        Button addBtn = new Button("Add");
+        addBtn.setOnAction(e -> {
+            try {
+                double price = Double.parseDouble(priceTF.getText());
+                if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
 
-    private void handleEdit(TextField nameTF, TextField categoryTF, TextField priceTF) {
-        MenuItem selected = tableView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Select an item to edit.");
-            return;
-        }
-        try {
-            double price = Double.parseDouble(priceTF.getText());
-            if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
+                MenuItem newItem = MenuItemFactory.createMenuItem(
+                        nameTF.getText(), categoryTF.getText(), price);
 
-            MenuItem validated = MenuItemFactory.createMenuItem(
-                    nameTF.getText(), categoryTF.getText(), price);
+                controller.addMenuItem(newItem);
+                bindTableData();
+                updateCategoryChart();
 
-            selected.nameProperty().set(validated.getName());
-            selected.categoryProperty().set(validated.getCategory());
-            selected.priceProperty().set(validated.getPrice());
+                nameTF.clear();
+                categoryTF.clear();
+                priceTF.clear();
+            } catch (Exception ex) {
+                showError(ex.getMessage());
+            }
+        });
 
-            controller.editMenuItem(selected);
+        // Edit button
+        Button editBtn = new Button("Edit");
+        editBtn.setOnAction(e -> {
+            MenuItem selected = tableView.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showError("Select an item to edit.");
+                return;
+            }
+
+            try {
+                double price = Double.parseDouble(priceTF.getText());
+                if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
+
+                MenuItem validated = MenuItemFactory.createMenuItem(
+                        nameTF.getText(), categoryTF.getText(), price);
+
+                selected.nameProperty().set(validated.getName());
+                selected.categoryProperty().set(validated.getCategory());
+                selected.priceProperty().set(validated.getPrice());
+
+                controller.editMenuItem(selected);
+                bindTableData();
+                updateCategoryChart();
+            } catch (Exception ex) {
+                showError(ex.getMessage());
+            }
+        });
+
+        // Delete button
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setOnAction(e -> {
+            MenuItem selected = tableView.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showError("Select an item to delete.");
+                return;
+            }
+
+            controller.deleteMenuItem(selected);
             bindTableData();
             updateCategoryChart();
 
-        } catch (IllegalArgumentException ex) {
-            showError(ex.getMessage());
-        } catch (Exception ex) {
-            showError("Invalid input. Enter proper values.");
-        }
-    }
+            nameTF.clear();
+            categoryTF.clear();
+            priceTF.clear();
+        });
 
-    // DELETE CRUD Operation code
-    private VBox buildDeleteSection() {
-        Label delLabel = new Label("Delete Selected Menu Item");
-        Button deleteBtn = new Button("Delete");
+        HBox crudLine = new HBox(10,
+                nameTF,
+                categoryTF,
+                priceTF,
+                addBtn,
+                editBtn,
+                deleteBtn
+        );
+        crudLine.setStyle("-fx-padding: 5 0 0 0;");
 
-        deleteBtn.setOnAction(e -> handleDelete());
-
-        return new VBox(5, delLabel, new HBox(10, deleteBtn));
-    }
-
-    private void handleDelete() {
-        MenuItem selected = tableView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Select an item to delete.");
-            return;
-        }
-        controller.deleteMenuItem(selected);
-        bindTableData();
-        updateCategoryChart();
+        return new VBox(5, crudLabel, crudLine);
     }
 
     // Back button code
@@ -269,7 +249,6 @@ public class MenuView extends VBox {
         );
         worker.start();
     }
-
 
     // Making Table
     private void createTable() {

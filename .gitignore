@@ -67,3 +67,5 @@ dist/                # packaged JARs
 .DS_Store
 Thumbs.db
 >>>>>>> e70476d58cd0ee8680dc489961ed6721a1306f1a
+### Log files ###
+sharpburger.log
