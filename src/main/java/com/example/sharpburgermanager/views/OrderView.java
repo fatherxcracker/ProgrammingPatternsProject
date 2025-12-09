@@ -35,9 +35,9 @@ public class OrderView extends VBox {
 
     public OrderView(OrderController controller) {
         Label titleLabel = new Label("SharpBurger Order Management");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: darkslateblue; -fx-font-family: 'Showcard Gothic';");
         HBox titleHBox = new HBox(titleLabel);
-        titleHBox.setStyle("-fx-alignment: center; -fx-padding: 0 0 10 0");
+        titleHBox.setStyle("-fx-alignment: center; -fx-padding: 0 0 10 0;");
 
         this.controller = controller;
         this.tableView = new TableView<>();
@@ -48,7 +48,6 @@ public class OrderView extends VBox {
         controller.setTypeUpdateCallback(freqMap -> updateBarGraph());
 
         Button searchButton = new Button("Search");
-//        Button showAllButton = new Button("Show All");
         TextField searchTF = new TextField();
         Label searchLabel = new Label("Search by Type of the Order: ");
         Label statusTGLabel = new Label("Option filter for Status of the Order: ");
@@ -57,10 +56,9 @@ public class OrderView extends VBox {
         HBox labelHBox = new HBox(searchLabel);
         HBox searchHBox = new HBox(10, searchTF, searchButton);
         HBox backHBox = new HBox(backButton);
-        backHBox.setStyle("-fx-alignment: bottom-right;");
+        backHBox.setStyle("-fx-alignment: bottom-right; -fx-background-color: grey");
 
         setupSearchButton(searchButton, searchTF);
-//        showAllButton.setOnAction(actionEvent -> bindTableData());
 
         // Radio Button Group
         ToggleGroup statusCompletedOrIncompletedTG = new ToggleGroup();
@@ -108,6 +106,10 @@ public class OrderView extends VBox {
         HBox addLabelHBox = new HBox(orderLabel);
         HBox addHBox = new HBox(10, nameTF, typeTF, priceTF, editStatTrueRB, editStatFalseRB, addButton, editButton, deleteButton);
 
+        addButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
+        editButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
+        deleteButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
+        backButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
 
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
@@ -125,8 +127,8 @@ public class OrderView extends VBox {
         editButton.setOnAction(e -> handleEdit(nameTF, typeTF, priceTF, editStatTrueRB));
 
         //Bar Graph (Based on Status)
-        CategoryAxis categoryAxis = new CategoryAxis();
-        NumberAxis numberAxis = new NumberAxis();
+        CategoryAxis categoryAxis = new CategoryAxis(); // x-axis
+        NumberAxis numberAxis = new NumberAxis(); // y-axis
         BarChart<String, Number> barChart = new BarChart<>(categoryAxis, numberAxis);
 
         XYChart.Series<String, Number> completedSeries = new XYChart.Series<>();
@@ -156,6 +158,9 @@ public class OrderView extends VBox {
 
         barChart.getData().addAll(Arrays.asList(completedSeries, incompletedSeries));
         barChart.setTitle("Completed vs Incompleted Orders by Order Type");
+        barChart.setStyle("-fx-font-weight: bold; -fx-background-color: white");
+
+
 
         // Finalizing
         this.getChildren().addAll(
@@ -171,7 +176,7 @@ public class OrderView extends VBox {
                 backHBox
         );
         this.setSpacing(10);
-        this.setStyle("-fx-padding: 20;");
+        this.setStyle("-fx-padding: 20; -fx-background-color: grey; -fx-font-weight: bold;");
 
         updateBarGraph();
     }

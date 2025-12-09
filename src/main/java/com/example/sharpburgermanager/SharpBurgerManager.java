@@ -8,8 +8,13 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public class SharpBurgerManager extends Application {
 
@@ -20,18 +25,37 @@ public class SharpBurgerManager extends Application {
         Button orderBtn = new Button("Order Item Management");
         Button exitButton = new Button("Exit");
 
-        menuBtn.setOnAction(e -> openMenuWindow(primaryStage));
-        orderBtn.setOnAction(e -> openOrderWindow(primaryStage));
-        exitButton.setOnAction(e -> System.exit(0));
+        try {
+            // for image
+            FileInputStream fis = new FileInputStream("src\\images\\Logo.png");
+            Image imageLogo = new Image(fis, 125, 125, false, false);
+            ImageView imageView = new ImageView(imageLogo);
+            imageView.setX(25);
+            imageView.setY(25);
 
-        VBox root = new VBox(10, titleLabel, menuBtn, orderBtn, exitButton);
-        root.setStyle("-fx-padding: 20; -fx-alignment: center;");
-        titleLabel.setStyle("-fx-font-weight: bold;");
+            menuBtn.setOnAction(e -> openMenuWindow(primaryStage));
+            orderBtn.setOnAction(e -> openOrderWindow(primaryStage));
+            exitButton.setOnAction(e -> System.exit(0));
 
-        Scene scene = new Scene(root, 300, 200);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Main Window");
-        primaryStage.show();
+            VBox root = new VBox(10, imageView, titleLabel, menuBtn, orderBtn, exitButton);
+
+            // setting the style
+            root.setStyle("-fx-padding: 20; -fx-alignment: center; -fx-background-color: grey;");
+            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-font-family: 'Showcard Gothic';");
+            menuBtn.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
+            orderBtn.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
+            exitButton.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
+
+            Scene scene = new Scene(root, 360, 300);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("SharpBurger Main Menu");
+            primaryStage.show();
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     private void openMenuWindow(Stage primaryStage) {
