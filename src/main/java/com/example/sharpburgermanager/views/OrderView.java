@@ -195,10 +195,12 @@ public class OrderView extends VBox {
         dineInBarIncompleted.setYValue(freq.getOrDefault("Dine In-Incompleted", 0));
     }
 
+    // Setups the search button function down below
     private void setupSearchButton(Button searchButton, TextField searchTF) {
         searchButton.setOnAction(event -> handleSearch(searchTF.getText()));
     }
 
+    // handles the search function
     private void handleSearch(String searchInput) {
         if (searchInput == null || searchInput.isEmpty()) {
             bindTableData();
@@ -212,6 +214,7 @@ public class OrderView extends VBox {
         tableView.setItems(FXCollections.observableArrayList(filteredList));
     }
 
+    // handles the radio button function for the search filter when selecting the incompleted button
     private void handleIncompletedRB() {
         List<OrderItem> orderItemList = controller.getOrderItems();
         List<OrderItem> filteredList = orderItemList.stream()
@@ -220,6 +223,7 @@ public class OrderView extends VBox {
         tableView.setItems(FXCollections.observableArrayList(filteredList));
     }
 
+    // handles the radio button function for the search filter when selecting the completed button
     private void handleCompletedRB() {
         List<OrderItem> orderItemList = controller.getOrderItems();
         List<OrderItem> filteredList = orderItemList.stream()
@@ -228,6 +232,7 @@ public class OrderView extends VBox {
         tableView.setItems(FXCollections.observableArrayList(filteredList));
     }
 
+    // handles back function to the main menu window
     private void handleBack() {
         // Closes current window
         this.getScene().getWindow().hide();
@@ -236,6 +241,7 @@ public class OrderView extends VBox {
         new SharpBurgerManager().start(new Stage());
     }
 
+    // handles the add button function
     private void handleAdd(TextField nameTF, TextField typeTF, TextField priceTF, RadioButton radioButtonTrue) {
         try {
             String name = nameTF.getText();
@@ -263,6 +269,7 @@ public class OrderView extends VBox {
         }
     }
 
+    // handles the edit button function
     private void handleEdit(TextField editNameTF, TextField editTypeTF, TextField editPriceTF, RadioButton editStatTrueRB) {
         OrderItem selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
@@ -294,6 +301,7 @@ public class OrderView extends VBox {
         }
     }
 
+    // handles the delete button function
     private void handleDelete() {
         OrderItem selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
@@ -304,6 +312,7 @@ public class OrderView extends VBox {
         }
     }
 
+    // creates the table for OrderView
     private void createTable() {
         TableColumn<OrderItem, Integer> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
