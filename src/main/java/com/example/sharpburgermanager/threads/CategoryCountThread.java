@@ -26,16 +26,6 @@ public class CategoryCountThread extends Thread{
             freq.put(category, freq.getOrDefault(category, 0) + 1);
         }
 
-        // So it doesn't give crash message when running unit tests.
-        if (!Platform.isFxApplicationThread()) {
-            try {
-                Platform.runLater(() -> callback.accept(freq));
-            } catch (IllegalStateException e) {
-                callback.accept(freq);
-            }
-            return;
-        }
-
         callback.accept(freq);
     }
 
