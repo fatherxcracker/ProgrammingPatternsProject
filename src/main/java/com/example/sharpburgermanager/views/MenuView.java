@@ -23,6 +23,7 @@ public class MenuView extends VBox {
     private final RadioButton categoryRB = new RadioButton("Category");
     private final RadioButton nameRB = new RadioButton("Name");
     private PieChart categoryChart;
+    private HBox categorySummaryBox;
 
     public MenuView(MenuController controller) {
         this.controller = controller;
@@ -30,7 +31,6 @@ public class MenuView extends VBox {
 
         createLayout(); // initialize categoryChart first
 
-        // Setup callback for async updates
         controller.setCategoryUpdateCallback(freqMap -> {
             PieChart.Data[] data = freqMap.entrySet()
                     .stream()
@@ -39,11 +39,11 @@ public class MenuView extends VBox {
 
             if (categoryChart != null) {
                 categoryChart.setData(FXCollections.observableArrayList(data));
+                updateCategorySummary(freqMap);
             }
         });
     }
-
-    // Handles layout/user interface
+    // Builds the user interface mainly
     private void createLayout() {
         Label titleLabel = new Label("SharpBurger Menu Management");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: darkslateblue; -fx-font-family: 'Showcard Gothic';");
@@ -63,7 +63,6 @@ public class MenuView extends VBox {
         categoryChart.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
         categoryChart.lookup(".chart-title").setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
-        // Initial synchronous calculation using getCategoryFrequency()
         HashMap<String, Integer> initialFreq = controller.getCategoryFrequency();
         PieChart.Data[] initialData = initialFreq.entrySet()
                 .stream()
@@ -71,7 +70,9 @@ public class MenuView extends VBox {
                 .toArray(PieChart.Data[]::new);
         categoryChart.setData(FXCollections.observableArrayList(initialData));
 
-        // Subsequent updates handled asynchronously
+        categorySummaryBox = new HBox(20);
+        updateCategorySummary(initialFreq);
+
         updateCategoryChart();
 
         VBox searchSection = buildSearchSection();
@@ -84,13 +85,14 @@ public class MenuView extends VBox {
                 tableView,
                 crudSection,
                 categoryChart,
+                categorySummaryBox,
                 backSection
         );
 
         this.setSpacing(15);
         this.setStyle("-fx-padding: 20; -fx-background-color: grey;");
     }
-
+    // Builds our search section
     private VBox buildSearchSection() {
         Label searchLabel = new Label("Search by Category or Name:");
         Label filterLabel = new Label("Search Filter:");
@@ -119,7 +121,7 @@ public class MenuView extends VBox {
 
         return new VBox(5, searchLabel, radioBox, searchBox);
     }
-
+    // Event handler for search
     private void handleSearch(String searchInput) {
         if (searchInput == null || searchInput.isEmpty()) {
             bindTableData();
@@ -136,7 +138,7 @@ public class MenuView extends VBox {
                     list.stream().filter(e -> e.getCategory().toLowerCase().contains(lowerSearch)).toList()));
         }
     }
-
+    // CRUD operations
     private VBox buildCRUDSection() {
         Label crudLabel = new Label("Manage Menu Items");
         crudLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
@@ -163,7 +165,7 @@ public class MenuView extends VBox {
                 priceTF.setText(String.valueOf(newV.getPrice()));
             }
         });
-
+        // Add button logic
         Button addBtn = new Button("Add");
         addBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         addBtn.setOnAction(e -> {
@@ -185,7 +187,7 @@ public class MenuView extends VBox {
                 showError(ex.getMessage());
             }
         });
-
+        // Edit button
         Button editBtn = new Button("Edit");
         editBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         editBtn.setOnAction(e -> {
@@ -213,7 +215,7 @@ public class MenuView extends VBox {
                 showError(ex.getMessage());
             }
         });
-
+        // Delete button
         Button deleteBtn = new Button("Delete");
         deleteBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         deleteBtn.setOnAction(e -> {
@@ -244,7 +246,7 @@ public class MenuView extends VBox {
 
         return new VBox(5, crudLabel, crudLine);
     }
-
+    // Back section (return to main menu)
     private HBox buildBackSection() {
         Button backBtn = new Button("Back");
         backBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
@@ -256,7 +258,7 @@ public class MenuView extends VBox {
         box.setStyle("-fx-alignment: bottom-right;");
         return box;
     }
-
+    // Multi Threading for updating the pie chart
     private void updateCategoryChart() {
         CategoryCountThread thread = new CategoryCountThread(
                 controller.getMenuItems(),
@@ -269,11 +271,21 @@ public class MenuView extends VBox {
                     Platform.runLater(() -> {
                         if (categoryChart != null) {
                             categoryChart.setData(FXCollections.observableArrayList(data));
+                            updateCategorySummary(resultMap);
                         }
                     });
                 }
         );
         thread.start();
+    }
+
+    private void updateCategorySummary(HashMap<String, Integer> freqMap) {
+        categorySummaryBox.getChildren().clear();
+        freqMap.forEach((category, count) -> {
+            Label label = new Label(category + ": " + count);
+            label.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue; -fx-font-size: 15;");
+            categorySummaryBox.getChildren().add(label);
+        });
     }
 
     private void createTable() {
@@ -296,7 +308,7 @@ public class MenuView extends VBox {
     private void bindTableData() {
         tableView.setItems(controller.getMenuItems());
     }
-
+    // Error message custom made
     private void showError(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
         alert.showAndWait();
