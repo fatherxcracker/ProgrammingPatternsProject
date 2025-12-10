@@ -20,12 +20,23 @@ public class CategoryCountThread extends Thread{
     public void run() {
         HashMap<String, Integer> freq = new HashMap<>();
 
-        // Now there is a Background Calculation
+        // Background count
         for (MenuItem item : items) {
             String category = item.getCategory();
             freq.put(category, freq.getOrDefault(category, 0) + 1);
         }
 
-        Platform.runLater(() -> callback.accept(freq));
+        // So it doesn't give crash message when running unit tests.
+        if (!Platform.isFxApplicationThread()) {
+            try {
+                Platform.runLater(() -> callback.accept(freq));
+            } catch (IllegalStateException e) {
+                callback.accept(freq);
+            }
+            return;
+        }
+
+        callback.accept(freq);
     }
+
 }

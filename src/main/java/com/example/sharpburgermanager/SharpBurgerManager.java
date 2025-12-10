@@ -28,7 +28,7 @@ public class SharpBurgerManager extends Application {
         try {
             // for image
             FileInputStream fis = new FileInputStream("src\\images\\Logo.png");
-            Image imageLogo = new Image(fis, 125, 125, false, false);
+            Image imageLogo = new Image(fis, 300, 300, false, false);
             ImageView imageView = new ImageView(imageLogo);
             imageView.setX(25);
             imageView.setY(25);
@@ -37,16 +37,16 @@ public class SharpBurgerManager extends Application {
             orderBtn.setOnAction(e -> openOrderWindow(primaryStage));
             exitButton.setOnAction(e -> System.exit(0));
 
-            VBox root = new VBox(10, imageView, titleLabel, menuBtn, orderBtn, exitButton);
+            VBox root = new VBox(30, titleLabel, imageView, menuBtn, orderBtn, exitButton);
 
             // setting the style
             root.setStyle("-fx-padding: 20; -fx-alignment: center; -fx-background-color: grey;");
-            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-font-family: 'Showcard Gothic';");
+            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 30px; -fx-font-family: 'Showcard Gothic'; -fx-text-fill: darkslateblue;");
             menuBtn.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
             orderBtn.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
             exitButton.setStyle("-fx-background-color: black; -fx-text-fill: darkslateblue; -fx-font-size: 15px;");
 
-            Scene scene = new Scene(root, 360, 300);
+            Scene scene = new Scene(root, 700, 700);
             primaryStage.setScene(scene);
             primaryStage.setTitle("SharpBurger Main Menu");
             primaryStage.show();
@@ -54,8 +54,6 @@ public class SharpBurgerManager extends Application {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     private void openMenuWindow(Stage primaryStage) {
@@ -74,7 +72,7 @@ public class SharpBurgerManager extends Application {
         OrderView view = new OrderView(controller);
 
         Stage stage = new Stage();
-        stage.setScene(new Scene(view, 950, 1000));
+        stage.setScene(new Scene(view, 950, 900));
         stage.setTitle("Order Item Management");
         stage.show();
         primaryStage.hide(); // Closes main window

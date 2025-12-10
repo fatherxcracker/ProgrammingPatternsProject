@@ -41,7 +41,7 @@ public class MenuView extends VBox {
     // Building user interface layout
     private void createLayout() {
         Label titleLabel = new Label("SharpBurger Menu Management");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: darkslateblue; -fx-font-family: 'Showcard Gothic';");
         HBox titleHBox = new HBox(titleLabel);
         titleHBox.setStyle("-fx-alignment: center; -fx-padding: 0 0 10 0");
 
@@ -71,7 +71,7 @@ public class MenuView extends VBox {
         );
 
         this.setSpacing(15);
-        this.setStyle("-fx-padding: 20;");
+        this.setStyle("-fx-padding: 20; -fx-background-color: GREY;");
     }
 
     // Handling searching code
@@ -236,7 +236,7 @@ public class MenuView extends VBox {
 
     // Pie Chart (now recalculates in the background)
     private void updateCategoryChart() {
-        CategoryCountThread worker = new CategoryCountThread(
+        CategoryCountThread thread = new CategoryCountThread(
                 controller.getMenuItems(),
                 resultMap -> {
                     PieChart.Data[] data = resultMap.entrySet()
@@ -247,7 +247,7 @@ public class MenuView extends VBox {
                     categoryChart.setData(FXCollections.observableArrayList(data));
                 }
         );
-        worker.start();
+        thread.start();
     }
 
     // Making Table
