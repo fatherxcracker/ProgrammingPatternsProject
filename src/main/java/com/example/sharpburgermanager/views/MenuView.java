@@ -4,6 +4,7 @@ import com.example.sharpburgermanager.controllers.MenuController;
 import com.example.sharpburgermanager.models.MenuItem;
 import com.example.sharpburgermanager.factories.MenuItemFactory;
 import com.example.sharpburgermanager.threads.CategoryCountThread;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
@@ -11,8 +12,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.HashMap;
 
 public class MenuView extends VBox {
 
@@ -27,18 +28,22 @@ public class MenuView extends VBox {
         this.controller = controller;
         this.tableView = new TableView<>();
 
+        createLayout(); // initialize categoryChart first
+
+        // Setup callback for async updates
         controller.setCategoryUpdateCallback(freqMap -> {
             PieChart.Data[] data = freqMap.entrySet()
                     .stream()
                     .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
                     .toArray(PieChart.Data[]::new);
-            categoryChart.setData(FXCollections.observableArrayList(data));
-        });
 
-        createLayout();
+            if (categoryChart != null) {
+                categoryChart.setData(FXCollections.observableArrayList(data));
+            }
+        });
     }
 
-    // Building user interface layout
+    // Handles layout/user interface
     private void createLayout() {
         Label titleLabel = new Label("SharpBurger Menu Management");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: darkslateblue; -fx-font-family: 'Showcard Gothic';");
@@ -46,15 +51,27 @@ public class MenuView extends VBox {
         titleHBox.setStyle("-fx-alignment: center; -fx-padding: 0 0 10 0");
 
         createTable();
+        tableView.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+
         bindTableData();
 
         categoryChart = new PieChart();
         categoryChart.setTitle("Menu Items by Category");
-        categoryChart.setPrefSize(350, 250); // It is width x height
+        categoryChart.setPrefSize(350, 250);
         categoryChart.setMinSize(350, 250);
         categoryChart.setMaxSize(350, 250);
-        categoryChart.lookup(".chart-title").setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        categoryChart.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+        categoryChart.lookup(".chart-title").setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
+        // Initial synchronous calculation using getCategoryFrequency()
+        HashMap<String, Integer> initialFreq = controller.getCategoryFrequency();
+        PieChart.Data[] initialData = initialFreq.entrySet()
+                .stream()
+                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                .toArray(PieChart.Data[]::new);
+        categoryChart.setData(FXCollections.observableArrayList(initialData));
+
+        // Subsequent updates handled asynchronously
         updateCategoryChart();
 
         VBox searchSection = buildSearchSection();
@@ -71,26 +88,30 @@ public class MenuView extends VBox {
         );
 
         this.setSpacing(15);
-        this.setStyle("-fx-padding: 20; -fx-background-color: GREY;");
+        this.setStyle("-fx-padding: 20; -fx-background-color: grey;");
     }
 
-    // Handling searching code
     private VBox buildSearchSection() {
         Label searchLabel = new Label("Search by Category or Name:");
         Label filterLabel = new Label("Search Filter:");
+        searchLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
+        filterLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
         ToggleGroup toggleGroup = new ToggleGroup();
         categoryRB.setToggleGroup(toggleGroup);
         nameRB.setToggleGroup(toggleGroup);
 
         TextField searchTF = new TextField();
+        searchTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
         Button searchBtn = new Button("Search");
+        searchBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         searchBtn.setOnAction(e -> handleSearch(searchTF.getText()));
 
         Button showAllBtn = new Button("Show All");
+        showAllBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         showAllBtn.setOnAction(e -> {
             searchTF.clear();
-            bindTableData(); // reloads everything
+            bindTableData();
         });
 
         HBox radioBox = new HBox(10, filterLabel, categoryRB, nameRB);
@@ -105,9 +126,7 @@ public class MenuView extends VBox {
             return;
         }
 
-        // So case in-sensitive
         String lowerSearch = searchInput.toLowerCase();
-
         List<MenuItem> list = controller.getMenuItems();
         if (nameRB.isSelected()) {
             tableView.setItems(FXCollections.observableArrayList(
@@ -120,18 +139,22 @@ public class MenuView extends VBox {
 
     private VBox buildCRUDSection() {
         Label crudLabel = new Label("Manage Menu Items");
+        crudLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
         TextField nameTF = new TextField();
         nameTF.setPromptText("Name");
         nameTF.setPrefWidth(150);
+        nameTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
         TextField categoryTF = new TextField();
         categoryTF.setPromptText("Category");
         categoryTF.setPrefWidth(150);
+        categoryTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
         TextField priceTF = new TextField();
         priceTF.setPromptText("Price");
         priceTF.setPrefWidth(100);
+        priceTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null) {
@@ -141,8 +164,8 @@ public class MenuView extends VBox {
             }
         });
 
-        // Add button
         Button addBtn = new Button("Add");
+        addBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         addBtn.setOnAction(e -> {
             try {
                 double price = Double.parseDouble(priceTF.getText());
@@ -163,8 +186,8 @@ public class MenuView extends VBox {
             }
         });
 
-        // Edit button
         Button editBtn = new Button("Edit");
+        editBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         editBtn.setOnAction(e -> {
             MenuItem selected = tableView.getSelectionModel().getSelectedItem();
             if (selected == null) {
@@ -191,8 +214,8 @@ public class MenuView extends VBox {
             }
         });
 
-        // Delete button
         Button deleteBtn = new Button("Delete");
+        deleteBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         deleteBtn.setOnAction(e -> {
             MenuItem selected = tableView.getSelectionModel().getSelectedItem();
             if (selected == null) {
@@ -222,9 +245,9 @@ public class MenuView extends VBox {
         return new VBox(5, crudLabel, crudLine);
     }
 
-    // Back button code
     private HBox buildBackSection() {
         Button backBtn = new Button("Back");
+        backBtn.setStyle("-fx-background-color: black; -fx-text-fill: white;");
         backBtn.setOnAction(e -> {
             this.getScene().getWindow().hide();
             new com.example.sharpburgermanager.SharpBurgerManager().start(new javafx.stage.Stage());
@@ -234,7 +257,6 @@ public class MenuView extends VBox {
         return box;
     }
 
-    // Pie Chart (now recalculates in the background)
     private void updateCategoryChart() {
         CategoryCountThread thread = new CategoryCountThread(
                 controller.getMenuItems(),
@@ -244,13 +266,16 @@ public class MenuView extends VBox {
                             .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
                             .toArray(PieChart.Data[]::new);
 
-                    categoryChart.setData(FXCollections.observableArrayList(data));
+                    Platform.runLater(() -> {
+                        if (categoryChart != null) {
+                            categoryChart.setData(FXCollections.observableArrayList(data));
+                        }
+                    });
                 }
         );
         thread.start();
     }
 
-    // Making Table
     private void createTable() {
         TableColumn<MenuItem, Integer> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));

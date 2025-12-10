@@ -7,7 +7,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.HashMap;
-import java.sql.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +74,10 @@ public class MenuController {
     }
 
     public void recalcAsync() {
-        new CategoryCountThread(menuItems, onCategoryUpdateCallback).start();
+        if (onCategoryUpdateCallback != null) {
+            Consumer<HashMap<String, Integer>> safeCallback = map ->
+                    javafx.application.Platform.runLater(() -> onCategoryUpdateCallback.accept(map));
+            new CategoryCountThread(menuItems, safeCallback).start();
+        }
     }
 }
