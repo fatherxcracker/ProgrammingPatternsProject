@@ -140,7 +140,7 @@ public class MenuView extends VBox {
     }
     // CRUD operations
     private VBox buildCRUDSection() {
-        Label crudLabel = new Label("Manage Menu Items");
+        Label crudLabel = new Label("Manage Menu Items (Acceptable Categories: Burgers, Beverages, Sides and Desserts)");
         crudLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
         TextField nameTF = new TextField();
@@ -208,8 +208,8 @@ public class MenuView extends VBox {
                 selected.categoryProperty().set(validated.getCategory());
                 selected.priceProperty().set(validated.getPrice());
 
-                controller.editMenuItem(selected);
-                bindTableData();
+                controller.editMenuItem(selected); // Saves changes to our database
+                bindTableData(); // refreshes the table
                 updateCategoryChart();
             } catch (Exception ex) {
                 showError(ex.getMessage());
@@ -226,14 +226,14 @@ public class MenuView extends VBox {
             }
 
             controller.deleteMenuItem(selected);
-            bindTableData();
+            bindTableData(); // Refreshes table
             updateCategoryChart();
 
             nameTF.clear();
             categoryTF.clear();
             priceTF.clear();
         });
-
+        // Add all crud line elements to hbox
         HBox crudLine = new HBox(10,
                 nameTF,
                 categoryTF,

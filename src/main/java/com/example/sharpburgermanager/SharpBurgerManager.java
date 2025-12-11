@@ -49,6 +49,7 @@ public class SharpBurgerManager extends Application {
             orderBtn.setOnAction(e -> openOrderWindow(primaryStage));
             exitButton.setOnAction(e -> System.exit(0));
 
+
             Label ownersLabel = new Label("Owners: James Luciano and Jodel Santos");
             ownersLabel.setFont(Font.font("Arial", 14));
             ownersLabel.setStyle("-fx-text-fill: darkslateblue;");
@@ -79,7 +80,9 @@ public class SharpBurgerManager extends Application {
         stage.setScene(new Scene(view, 750, 900));
         stage.setTitle("Menu Item Management");
         stage.show();
+
         primaryStage.hide(); // Closes main window
+
     }
 
     private void openOrderWindow(Stage primaryStage) {
@@ -90,6 +93,7 @@ public class SharpBurgerManager extends Application {
         stage.setScene(new Scene(view, 950, 900));
         stage.setTitle("Order Item Management");
         stage.show();
+
         primaryStage.hide(); // Closes main window
     }
 

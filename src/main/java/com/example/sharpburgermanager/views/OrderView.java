@@ -4,6 +4,7 @@ import com.example.sharpburgermanager.SharpBurgerManager;
 import com.example.sharpburgermanager.controllers.OrderController;
 import com.example.sharpburgermanager.models.OrderItem;
 import com.example.sharpburgermanager.factories.OrderItemFactory;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
@@ -80,7 +81,7 @@ public class OrderView extends VBox {
         // End of RBG
 
         // Add and Edit Operation Code
-        Label orderLabel = new Label("Add a new Order Item, select a row to update its data or delete A Order Item (Select It From The Table)");
+        Label orderLabel = new Label("Manage Order Items (Acceptable Types: Drive Thru, Pick Up, Delivery, Uber Eats and Dine In)");
         TextField nameTF = new TextField();
         nameTF.setPromptText("Name");
         TextField typeTF = new TextField();
@@ -106,10 +107,21 @@ public class OrderView extends VBox {
         HBox addLabelHBox = new HBox(orderLabel);
         HBox addHBox = new HBox(10, nameTF, typeTF, priceTF, editStatTrueRB, editStatFalseRB, addButton, editButton, deleteButton);
 
+        // Styling
         addButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
         editButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
         deleteButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
         backButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
+        searchButton.setStyle("-fx-text-fill: white; -fx-background-color: black;");
+
+        nameTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+        typeTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+        priceTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+        searchTF.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+
+        searchLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
+        orderLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
+        statusTGLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: darkslateblue;");
 
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
@@ -156,11 +168,14 @@ public class OrderView extends VBox {
                 Arrays.asList(driveThruBarIncompleted, pickUpBarIncompleted, deliveryBarIncompleted, uberEatsBarIncompleted, dineInBarIncompleted)
         );
 
+        // Styling for Bar Chart
         barChart.getData().addAll(Arrays.asList(completedSeries, incompletedSeries));
         barChart.setTitle("Completed vs Incompleted Orders by Order Type");
-        barChart.setStyle("-fx-font-weight: bold; -fx-background-color: white");
+        barChart.setStyle("-fx-font-weight: bold; -fx-background-color: white; -fx-border-width: 1px; -fx-border-color: black;");
+        barChart.lookup(".chart-title").setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: darkslateblue;");
+        barChart.setStyle("CHART_COLOR_1: green; CHART_COLOR_2: red;");
 
-
+        tableView.setStyle("-fx-border-width: 1px; -fx-border-color: black;");
 
         // Finalizing
         this.getChildren().addAll(
@@ -271,6 +286,8 @@ public class OrderView extends VBox {
         } catch (IndexOutOfBoundsException indexOutOfBoundsException) {
             showAlert(Alert.AlertType.ERROR, "Price is Negative", "The Price number must be positive or 0.");
             priceTF.clear();
+        } catch (Exception exception) {
+            showAlert(Alert.AlertType.ERROR, "Exception Occurred", exception.getMessage());
         }
     }
 
